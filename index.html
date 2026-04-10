@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Actividad Económica | Grupo Petersen</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #08090b;
+  --s1:       #0e1117;
+  --s2:       #141921;
+  --border:   #1c2635;
+  --border2:  #253347;
+  --accent:   #3b82f6;
+  --cyan:     #06b6d4;
+  --green:    #22c55e;
+  --red:      #ef4444;
+  --orange:   #f97316;
+  --yellow:   #eab308;
+  --text:     #e2e8f0;
+  --muted:    #4a6080;
+  --dim:      #1e2d3e;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ─── HEADER ─────────────────────────────────────────── */
+.topbar {
+  background: var(--s1);
+  border-bottom: 1px solid var(--border);
+  height: 52px;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+}
+
+.brand {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  letter-spacing: 2.5px;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.topbar-divider { width: 1px; height: 24px; background: var(--border2); }
+
+.macro-strip {
+  display: flex;
+  gap: 20px;
+  flex: 1;
+  overflow: hidden;
+}
+
+.macro-item {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.macro-lbl { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+.macro-val { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 500; }
+.macro-val.pos { color: var(--green); }
+.macro-val.neg { color: var(--red); }
+.macro-val.neu { color: var(--yellow); }
+.macro-val.info { color: var(--cyan); }
+
+.topbar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.refresh-btn {
+  background: none;
+  border: 1px solid var(--border2);
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  padding: 4px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all .15s;
+}
+.refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+.last-update { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); }
+
+/* ─── ALERT BANNER ───────────────────────────────────── */
+.alert-banner {
+  background: rgba(239,68,68,.08);
+  border-bottom: 1px solid rgba(239,68,68,.25);
+  padding: 6px 20px;
+  display: none;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--red);
+}
+.alert-banner.visible { display: flex; }
+.alert-banner strong { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1px; background: var(--red); color: #fff; padding: 1px 5px; border-radius: 2px; }
+.alert-scroll { overflow: hidden; white-space: nowrap; }
+.alert-scroll span { display: inline-block; animation: scrollLeft 30s linear infinite; }
+@keyframes scrollLeft { from { transform: translateX(100vw); } to { transform: translateX(-100%); } }
+
+/* ─── LAYOUT ─────────────────────────────────────────── */
+.layout {
+  display: grid;
+  grid-template-columns: 220px 1fr 300px;
+  min-height: calc(100vh - 52px);
+}
+
+/* ─── SIDEBAR ────────────────────────────────────────── */
+.sidebar {
+  background: var(--s1);
+  border-right: 1px solid var(--border);
+  padding: 16px 0;
+  position: sticky;
+  top: 52px;
+  height: calc(100vh - 52px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.sb-section { padding: 0 14px 14px; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+.sb-label { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
+
+.prov-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 10px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-bottom: 4px;
+  transition: all .15s;
+  background: none;
+  width: 100%;
+  text-align: left;
+  color: var(--text);
+}
+.prov-card:hover { background: var(--s2); border-color: var(--border2); }
+.prov-card.active { background: rgba(59,130,246,.12); border-color: var(--accent); }
+
+.prov-card-left { display: flex; align-items: center; gap: 8px; }
+.prov-badge { font-family: 'DM Mono', monospace; font-size: 9px; background: var(--dim); padding: 2px 5px; border-radius: 2px; color: var(--muted); }
+.prov-card.active .prov-badge { background: rgba(59,130,246,.2); color: var(--accent); }
+.prov-name { font-size: 13px; font-weight: 500; }
+.prov-var { font-family: 'DM Mono', monospace; font-size: 11px; }
+
+.filter-row { margin-bottom: 8px; }
+.filter-lbl { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+.filter-sel {
+  width: 100%;
+  background: var(--s2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  padding: 5px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.legend { display: flex; flex-direction: column; gap: 5px; }
+.leg-row { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); }
+.leg-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* ─── MAIN ───────────────────────────────────────────── */
+.main { padding: 20px; overflow-y: auto; }
+
+/* KPI ROW */
+.kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 18px; }
+.kpi-card {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px 14px;
+}
+.kpi-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.kpi-icon { font-size: 16px; }
+.kpi-badge { font-family: 'DM Mono', monospace; font-size: 8px; padding: 2px 5px; border-radius: 2px; }
+.kpi-badge.pos { background: rgba(34,197,94,.15); color: var(--green); }
+.kpi-badge.neg { background: rgba(239,68,68,.15); color: var(--red); }
+.kpi-badge.neu { background: rgba(234,179,8,.15); color: var(--yellow); }
+.kpi-val { font-family: 'DM Mono', monospace; font-size: 22px; font-weight: 500; margin-bottom: 2px; }
+.kpi-val.pos { color: var(--green); }
+.kpi-val.neg { color: var(--red); }
+.kpi-val.neu { color: var(--yellow); }
+.kpi-val.info { color: var(--cyan); }
+.kpi-lbl { font-size: 11px; color: var(--muted); }
+
+/* SECTION HEADER */
+.sec-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.sec-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--muted);
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.sec-title em { color: var(--accent); font-style: normal; }
+
+/* OPORTUNIDADES SPLIT */
+.opp-split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+.opp-panel {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 14px;
+}
+.opp-panel.crecer { border-color: rgba(34,197,94,.3); background: rgba(34,197,94,.04); }
+.opp-panel.salir  { border-color: rgba(249,115,22,.3); background: rgba(249,115,22,.04); }
+
+.opp-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+}
+.opp-title.crecer { color: var(--green); }
+.opp-title.salir  { color: var(--orange); }
+
+.opp-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  gap: 6px;
+}
+.opp-row:last-child { border-bottom: none; }
+.opp-row-name { flex: 1; color: var(--text); line-height: 1.3; }
+.opp-row-vals { font-family: 'DM Mono', monospace; font-size: 11px; white-space: nowrap; text-align: right; }
+
+/* SECTOR GRID */
+.sector-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 10px; margin-bottom: 20px; }
+
+.sc {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-left: 3px solid;
+  border-radius: 5px;
+  padding: 12px 14px;
+  cursor: default;
+  transition: border-color .15s, background .15s;
+  animation: fadeUp .35s ease both;
+}
+.sc:hover { background: var(--s2); }
+.sc.crecer { border-left-color: var(--green); }
+.sc.salir  { border-left-color: var(--red); }
+.sc.defender { border-left-color: var(--yellow); }
+.sc.observar { border-left-color: var(--muted); }
+
+.sc.top { border-color: var(--green); background: rgba(34,197,94,.04); box-shadow: 0 0 18px rgba(34,197,94,.06); }
+.sc.alert-card { border-color: rgba(239,68,68,.4); background: rgba(239,68,68,.04); }
+
+@keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+.sc:nth-child(1){animation-delay:.03s} .sc:nth-child(2){animation-delay:.06s}
+.sc:nth-child(3){animation-delay:.09s} .sc:nth-child(4){animation-delay:.12s}
+.sc:nth-child(5){animation-delay:.15s} .sc:nth-child(6){animation-delay:.18s}
+.sc:nth-child(7){animation-delay:.21s} .sc:nth-child(8){animation-delay:.24s}
+
+.sc-top { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:8px; gap:6px; }
+.sc-name { font-size:12px; font-weight:500; color:var(--text); line-height:1.3; }
+.sc-code { font-family:'DM Mono',monospace; font-size:9px; background:var(--dim); padding:2px 5px; border-radius:2px; color:var(--muted); flex-shrink:0; }
+
+.sc-metrics { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; margin-bottom:8px; }
+.sc-m-val { font-family:'DM Mono',monospace; font-size:14px; font-weight:500; }
+.sc-m-val.pos { color:var(--green); }
+.sc-m-val.neg { color:var(--red); }
+.sc-m-val.neu { color:var(--yellow); }
+.sc-m-lbl { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; }
+
+/* mini sparkline canvas replacement with divs */
+.sparkline { display:flex; gap:2px; height:20px; align-items:flex-end; margin-bottom:8px; }
+.spark-bar { flex:1; border-radius:1px; min-height:2px; }
+.spark-bar.pos { background:rgba(34,197,94,.55); }
+.spark-bar.neg { background:rgba(239,68,68,.55); }
+
+.sc-footer { display:flex; align-items:center; justify-content:space-between; }
+.opp-tag { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1px; padding:2px 7px; border-radius:2px; text-transform:uppercase; }
+.opp-tag.crecer  { background:rgba(34,197,94,.12);  color:var(--green);  border:1px solid rgba(34,197,94,.3); }
+.opp-tag.salir   { background:rgba(249,115,22,.12); color:var(--orange); border:1px solid rgba(249,115,22,.3); }
+.opp-tag.defender{ background:rgba(234,179,8,.12);  color:var(--yellow); border:1px solid rgba(234,179,8,.3); }
+.opp-tag.observar{ background:rgba(74,96,128,.12);  color:var(--muted);  border:1px solid rgba(74,96,128,.3); }
+.sc-size { font-size:9px; color:var(--muted); font-family:'DM Mono',monospace; text-transform:uppercase; }
+
+/* PERIOD TOGGLE */
+.period-toggle { display:flex; background:var(--s2); border:1px solid var(--border); border-radius:4px; padding:2px; gap:2px; }
+.pt-btn { padding:3px 10px; border:none; background:none; color:var(--muted); font-family:'DM Mono',monospace; font-size:10px; border-radius:2px; cursor:pointer; transition:all .12s; }
+.pt-btn.active { background:var(--accent); color:#fff; font-weight:600; }
+
+/* FILTER CHIPS */
+.chips { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+.chip { padding:4px 11px; border:1px solid var(--border); background:var(--s1); color:var(--muted); font-family:'DM Mono',monospace; font-size:9px; border-radius:20px; cursor:pointer; transition:all .12s; letter-spacing:.5px; text-transform:uppercase; }
+.chip:hover { border-color:var(--accent); color:var(--accent); }
+.chip.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+
+/* TABLE */
+.tbl-wrap { background:var(--s1); border:1px solid var(--border); border-radius:6px; overflow:auto; margin-bottom:20px; }
+table { width:100%; border-collapse:collapse; font-size:11px; }
+thead th { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1px; color:var(--muted); text-transform:uppercase; padding:8px 10px; text-align:right; border-bottom:1px solid var(--border); white-space:nowrap; }
+thead th:first-child { text-align:left; }
+tbody td { padding:7px 10px; border-bottom:1px solid rgba(28,38,53,.6); font-family:'DM Mono',monospace; font-size:11px; text-align:right; color:var(--text); }
+tbody td:first-child { text-align:left; font-family:'DM Sans',sans-serif; font-size:12px; max-width:220px; }
+tbody tr:hover td { background:var(--s2); }
+.tv-pos { color:var(--green); } .tv-neg { color:var(--red); } .tv-neu { color:var(--yellow); }
+
+/* ─── NEWS PANEL ─────────────────────────────────────── */
+.news-panel {
+  background: var(--s1);
+  border-left: 1px solid var(--border);
+  position: sticky;
+  top: 52px;
+  height: calc(100vh - 52px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.news-hdr {
+  padding: 14px 14px 10px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.news-title { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; }
+.news-count { font-family:'DM Mono',monospace; font-size:10px; color:var(--accent); }
+
+.news-filters { padding:8px 14px; border-bottom:1px solid var(--border); display:flex; gap:4px; flex-wrap:wrap; flex-shrink:0; }
+.nf-chip { padding:2px 8px; border:1px solid var(--border); background:none; color:var(--muted); font-family:'DM Mono',monospace; font-size:9px; border-radius:20px; cursor:pointer; transition:all .12s; text-transform:uppercase; }
+.nf-chip:hover { border-color:var(--cyan); color:var(--cyan); }
+.nf-chip.active { background:var(--cyan); color:var(--bg); border-color:var(--cyan); }
+
+.news-list { overflow-y:auto; flex:1; padding:8px 0; }
+
+.news-card {
+  padding:10px 14px;
+  border-bottom:1px solid var(--border);
+  cursor:pointer;
+  transition:background .12s;
+}
+.news-card:hover { background:var(--s2); }
+.news-card.alerta { border-left:3px solid var(--red); background:rgba(239,68,68,.04); }
+.news-card.pos-card { border-left:3px solid var(--green); }
+
+.nc-top { display:flex; align-items:flex-start; justify-content:space-between; gap:6px; margin-bottom:5px; }
+.nc-titulo { font-size:12px; font-weight:500; color:var(--text); line-height:1.35; flex:1; }
+.nc-sent { width:6px; height:6px; border-radius:50%; flex-shrink:0; margin-top:4px; }
+.nc-sent.positivo { background:var(--green); }
+.nc-sent.negativo { background:var(--red); }
+.nc-sent.neutro   { background:var(--muted); }
+
+.nc-resumen { font-size:11px; color:var(--muted); margin-bottom:6px; line-height:1.4; }
+
+.nc-footer { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.nc-sector { font-family:'DM Mono',monospace; font-size:8px; background:var(--dim); padding:1px 5px; border-radius:2px; color:var(--muted); text-transform:uppercase; }
+.nc-prov   { font-family:'DM Mono',monospace; font-size:8px; background:rgba(59,130,246,.12); padding:1px 5px; border-radius:2px; color:var(--accent); }
+.nc-alerta { font-family:'DM Mono',monospace; font-size:8px; background:rgba(239,68,68,.15); padding:1px 5px; border-radius:2px; color:var(--red); }
+.nc-fuente { font-size:9px; color:var(--muted); margin-left:auto; }
+.nc-date   { font-family:'DM Mono',monospace; font-size:9px; color:var(--muted); }
+
+.news-empty { padding:30px 14px; text-align:center; color:var(--muted); font-size:12px; }
+
+.skeleton { background:linear-gradient(90deg, var(--s2) 25%, var(--dim) 50%, var(--s2) 75%); background-size:200% 100%; animation:skeletonAnim 1.5s infinite; border-radius:3px; }
+@keyframes skeletonAnim { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+/* LOADING */
+.loading-overlay { display:flex; align-items:center; justify-content:center; padding:40px; color:var(--muted); font-family:'DM Mono',monospace; font-size:11px; letter-spacing:1px; }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width:4px; height:4px; }
+::-webkit-scrollbar-track { background:var(--bg); }
+::-webkit-scrollbar-thumb { background:var(--dim); border-radius:2px; }
+
+@media (max-width:1200px) { .layout { grid-template-columns:200px 1fr; } .news-panel { display:none; } }
+@media (max-width:800px)  { .layout { grid-template-columns:1fr; } .sidebar { display:none; } .kpi-row { grid-template-columns:1fr 1fr; } }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="brand">GP · ECO RADAR</div>
+  <div class="topbar-divider"></div>
+  <div class="macro-strip" id="macroStrip">
+    <div class="macro-item"><span class="macro-lbl">MEP</span><span class="macro-val neu" id="macMep">—</span></div>
+    <div class="macro-item"><span class="macro-lbl">CCL</span><span class="macro-val neu" id="macCcl">—</span></div>
+    <div class="macro-item"><span class="macro-lbl">BLUE</span><span class="macro-val neu" id="macBlue">—</span></div>
+    <div class="macro-item"><span class="macro-lbl">Inflación</span><span class="macro-val neg" id="macInfl">—</span></div>
+    <div class="macro-item"><span class="macro-lbl">Tasa BCRA</span><span class="macro-val info" id="macTasa">—</span></div>
+    <div class="macro-item"><span class="macro-lbl">Reservas</span><span class="macro-val info" id="macReservas">—</span></div>
+  </div>
+  <div class="topbar-right">
+    <span class="last-update" id="lastUpdate">—</span>
+    <button class="refresh-btn" onclick="refreshAll()">↺ ACTUALIZAR</button>
+  </div>
+</header>
+
+<!-- ALERT BANNER -->
+<div class="alert-banner" id="alertBanner">
+  <strong>⚠ ALERTA TEMPRANA</strong>
+  <div class="alert-scroll"><span id="alertText"></span></div>
+</div>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-section">
+      <div class="sb-label">Provincia</div>
+      <button class="prov-card active" onclick="setProv('SF')" id="pbSF">
+        <div class="prov-card-left"><span class="prov-badge">SF</span><span class="prov-name">Santa Fe</span></div>
+        <span class="prov-var pos" id="pvSF">+4.2%</span>
+      </button>
+      <button class="prov-card" onclick="setProv('ER')" id="pbER">
+        <div class="prov-card-left"><span class="prov-badge">ER</span><span class="prov-name">Entre Ríos</span></div>
+        <span class="prov-var neu" id="pvER">+2.1%</span>
+      </button>
+      <button class="prov-card" onclick="setProv('SJ')" id="pbSJ">
+        <div class="prov-card-left"><span class="prov-badge">SJ</span><span class="prov-name">San Juan</span></div>
+        <span class="prov-var neu" id="pvSJ">+1.4%</span>
+      </button>
+      <button class="prov-card" onclick="setProv('SC')" id="pbSC">
+        <div class="prov-card-left"><span class="prov-badge">SC</span><span class="prov-name">Santa Cruz</span></div>
+        <span class="prov-var pos" id="pvSC">+3.8%</span>
+      </button>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-label">Filtros</div>
+      <div class="filter-row">
+        <div class="filter-lbl">Oportunidad</div>
+        <select class="filter-sel" id="filterOpp" onchange="applyFilters()">
+          <option value="todas">Todas</option>
+          <option value="crecer">▲ Crecer</option>
+          <option value="salir">▼ Salir</option>
+          <option value="defender">◆ Defender</option>
+          <option value="observar">○ Observar</option>
+        </select>
+      </div>
+      <div class="filter-row">
+        <div class="filter-lbl">Tamaño SEPyME</div>
+        <select class="filter-sel" id="filterSize" onchange="applyFilters()">
+          <option value="todas">Todas</option>
+          <option value="micro">Micro</option>
+          <option value="pequena">Pequeña</option>
+          <option value="mediana">Mediana</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-label">Referencias</div>
+      <div class="legend">
+        <div class="leg-row"><div class="leg-dot" style="background:var(--green)"></div>Crecimiento positivo</div>
+        <div class="leg-row"><div class="leg-dot" style="background:var(--red)"></div>Caída / Contracción</div>
+        <div class="leg-row"><div class="leg-dot" style="background:var(--yellow)"></div>Variación moderada</div>
+        <div class="leg-row"><div class="leg-dot" style="background:var(--muted)"></div>Sin tendencia clara</div>
+      </div>
+    </div>
+
+    <div class="sb-section" style="border:none">
+      <div class="sb-label">Fuentes</div>
+      <div style="font-size:10px; color:var(--muted); line-height:1.7">
+        BCRA · DolarAPI<br>INDEC · IERAL<br>RSS Medios AR<br>Claude AI (clasificación)<br>
+        <br>
+        <span style="color:var(--border2)">Actualización: 15 min</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main" id="mainContent">
+    <div class="loading-overlay">CARGANDO DATOS...</div>
+  </main>
+
+  <!-- NEWS PANEL -->
+  <aside class="news-panel">
+    <div class="news-hdr">
+      <span class="news-title">Noticias · Sectorial</span>
+      <span class="news-count" id="newsCount">0</span>
+    </div>
+    <div class="news-filters">
+      <button class="nf-chip active" onclick="filterNews('todas')" id="nfTodas">Todas</button>
+      <button class="nf-chip" onclick="filterNews('alertas')" id="nfAlertas">⚠ Alertas</button>
+      <button class="nf-chip" onclick="filterNews('crecer')" id="nfCrecer">▲ Crecer</button>
+      <button class="nf-chip" onclick="filterNews('prov')" id="nfProv">Provincia</button>
+    </div>
+    <div class="news-list" id="newsList">
+      <div class="news-empty">Cargando noticias...</div>
+    </div>
+  </aside>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// CONFIG — Cambiá esta URL por la de tu Render service
+// ═══════════════════════════════════════════════════════
+const API_BASE = "https://eco-radar-backend.onrender.com";  // ← ACTUALIZAR
+
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+let state = {
+  prov:       "SF",
+  opp:        "todas",
+  size:       "todas",
+  period:     "anual",
+  newsFilter: "todas",
+  sectoresData: {},
+  noticias:   [],
+  indicadores: {},
+};
+
+// Spark history dummy (12 meses) — reemplazar con serie real del backend
+const SPARK = {
+  SF: {
+    "A011":[4,6,5,8,7,9,6,10,7,6,8,7], "C261":[4,5,6,7,6,8,7,9,8,9,8,8],
+    "C101":[3,4,5,6,5,6,7,6,5,7,6,6], "J620":[5,6,7,8,9,9,10,11,11,11,11,11],
+    "G461":[2,3,4,3,4,5,4,5,5,5,5,5], "C241":[1,2,3,2,3,4,3,4,3,4,3,3],
+    "A012":[2,3,2,4,3,3,2,3,4,2,3,2], "H491":[1,0,1,1,0,1,1,0,1,1,0,1],
+    "I551":[0,1,0,1,1,1,1,1,1,1,1,1], "G471":[2,1,0,-1,0,-1,-2,-1,-2,-1,-2,-2],
+    "C131":[1,2,1,-1,0,-1,-2,-1,-3,-2,-3,-3], "F411":[1,0,-1,-2,-3,-3,-4,-4,-5,-5,-5,-5],
+  },
+  ER: {
+    "A022":[4,5,6,7,7,8,7,8,8,8,8,8], "I551":[3,5,6,7,8,8,9,9,9,9,9,9],
+    "C101":[4,5,5,6,7,7,7,7,7,7,7,7], "A011":[3,4,5,4,5,6,5,6,5,6,5,5],
+    "A031":[2,2,3,3,3,4,3,3,4,3,3,3], "F411":[1,2,3,3,4,4,4,4,4,4,4,4],
+    "C241":[0,1,0,1,1,0,1,1,0,1,0,1], "H491":[0,1,1,1,1,1,1,1,1,1,1,1],
+    "G471":[1,0,-1,-1,-2,-2,-2,-2,-2,-2,-2,-2], "C161":[1,1,0,0,-1,-1,-2,-2,-2,-2,-2,-2],
+  },
+  SJ: {
+    "D351":[5,7,9,11,12,13,14,15,15,15,15,15], "B051":[5,7,8,9,10,11,11,12,12,12,12,12],
+    "B091":[3,4,5,6,7,8,8,8,8,8,8,8], "A013":[3,4,5,5,6,7,7,7,7,7,7,7],
+    "C110":[2,3,4,4,5,5,5,5,5,5,5,5], "F411":[3,4,5,6,6,7,7,7,7,7,7,7],
+    "A011":[2,3,3,4,3,4,4,4,4,4,4,4], "I551":[2,3,3,4,4,5,5,5,5,5,5,5],
+    "G471":[1,0,0,-1,0,-1,-1,-1,-1,-1,-1,-1], "C241":[1,0,-1,-2,-2,-3,-3,-4,-4,-4,-4,-4],
+  },
+  SC: {
+    "D351":[5,8,10,13,15,17,18,19,19,19,19,19], "B091":[4,5,6,8,9,10,10,10,10,10,10,10],
+    "B060":[4,6,7,7,8,8,9,9,9,9,9,9], "H491":[3,4,5,6,7,8,8,8,8,8,8,8],
+    "I551":[2,4,5,5,6,6,6,6,6,6,6,6], "F421":[2,3,4,5,5,6,6,6,6,6,6,6],
+    "A031":[2,3,3,4,4,4,4,4,4,4,4,4], "C101":[2,3,3,4,4,4,4,4,4,4,4,4],
+    "A014":[1,0,0,-1,0,-1,-1,-1,-1,-1,-1,-1], "G471":[1,0,0,0,0,-1,0,-1,-1,-1,-1,-1],
+  }
+};
+
+// ═══════════════════════════════════════════════════════
+// FETCH
+// ═══════════════════════════════════════════════════════
+async function fetchIndicadores() {
+  try {
+    const r = await fetch(`${API_BASE}/api/indicadores`);
+    if (!r.ok) throw new Error(r.status);
+    return await r.json();
+  } catch(e) {
+    console.warn("indicadores fetch error:", e);
+    return null;
+  }
+}
+
+async function fetchSectores(prov) {
+  try {
+    const r = await fetch(`${API_BASE}/api/sectores/${prov}`);
+    if (!r.ok) throw new Error(r.status);
+    return await r.json();
+  } catch(e) {
+    console.warn("sectores fetch error:", e);
+    return null;
+  }
+}
+
+async function fetchNoticias() {
+  try {
+    const r = await fetch(`${API_BASE}/api/noticias`);
+    if (!r.ok) throw new Error(r.status);
+    return await r.json();
+  } catch(e) {
+    console.warn("noticias fetch error:", e);
+    return null;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// REFRESH
+// ═══════════════════════════════════════════════════════
+async function refreshAll() {
+  document.getElementById('lastUpdate').textContent = "Actualizando...";
+
+  const [ind, nots, sects] = await Promise.all([
+    fetchIndicadores(),
+    fetchNoticias(),
+    fetchSectores(state.prov),
+  ]);
+
+  if (ind) {
+    state.indicadores = ind;
+    updateMacroStrip(ind);
+  }
+  if (nots) {
+    state.noticias = nots.items || [];
+    renderNoticias();
+  }
+  if (sects) {
+    state.sectoresData[state.prov] = sects;
+    renderMain();
+  } else {
+    renderMain(); // usa datos embedded
+  }
+
+  document.getElementById('lastUpdate').textContent =
+    new Date().toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'});
+}
+
+async function loadProv(prov) {
+  if (!state.sectoresData[prov]) {
+    const data = await fetchSectores(prov);
+    if (data) state.sectoresData[prov] = data;
+  }
+  renderMain();
+}
+
+// ═══════════════════════════════════════════════════════
+// MACRO STRIP
+// ═══════════════════════════════════════════════════════
+function updateMacroStrip(ind) {
+  const d = ind.dolar || {};
+  const b = ind.bcra  || {};
+
+  const mep  = d.bolsa?.venta;
+  const ccl  = d.contadoconliqui?.venta;
+  const blue = d.blue?.venta;
+  const infl = b.inflacion_mensual;
+  const tasa = b.tasa_politica;
+  const res  = b.reservas_bn;
+
+  if (mep)  document.getElementById('macMep').textContent   = `$${Number(mep).toLocaleString('es-AR')}`;
+  if (ccl)  document.getElementById('macCcl').textContent   = `$${Number(ccl).toLocaleString('es-AR')}`;
+  if (blue) document.getElementById('macBlue').textContent  = `$${Number(blue).toLocaleString('es-AR')}`;
+  if (infl) document.getElementById('macInfl').textContent  = `${infl}%`;
+  if (tasa) document.getElementById('macTasa').textContent  = `${tasa}%`;
+  if (res)  document.getElementById('macReservas').textContent = `$${Number(res).toFixed(1)}B`;
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER MAIN
+// ═══════════════════════════════════════════════════════
+
+// Datos fallback embedded (mismos que el dashboard anterior)
+const FALLBACK = {
+  SF: { provincia:"Santa Fe", var_anual:4.2, var_mensual:0.8, sectores:[
+    {codigo:"A011",nombre:"Agricultura – Cereales y Oleaginosas",varA:6.1,varM:1.2,indice:88,opp:"crecer",size:"mediana"},
+    {codigo:"C261",nombre:"Maquinaria Agrícola",varA:8.4,varM:2.1,indice:95,opp:"crecer",size:"mediana"},
+    {codigo:"C101",nombre:"Frigoríficos y Alimentos",varA:5.8,varM:1.5,indice:92,opp:"crecer",size:"mediana"},
+    {codigo:"J620",nombre:"Servicios Tecnológicos",varA:11.2,varM:2.8,indice:43,opp:"crecer",size:"pequena"},
+    {codigo:"G461",nombre:"Comercio Mayorista Agro",varA:4.7,varM:0.9,indice:78,opp:"crecer",size:"pequena"},
+    {codigo:"C241",nombre:"Metalmecánica",varA:3.1,varM:0.6,indice:71,opp:"defender",size:"mediana"},
+    {codigo:"A012",nombre:"Horticultura",varA:2.4,varM:0.3,indice:45,opp:"defender",size:"pequena"},
+    {codigo:"H491",nombre:"Transporte de Cargas",varA:0.9,varM:0.2,indice:62,opp:"observar",size:"pequena"},
+    {codigo:"I551",nombre:"Hotelería y Gastronomía",varA:1.2,varM:0.3,indice:38,opp:"observar",size:"micro"},
+    {codigo:"G471",nombre:"Comercio Minorista",varA:-1.8,varM:-0.4,indice:55,opp:"salir",size:"micro"},
+    {codigo:"C131",nombre:"Industria Textil",varA:-3.2,varM:-0.7,indice:34,opp:"salir",size:"pequena"},
+    {codigo:"F411",nombre:"Construcción Residencial",varA:-5.1,varM:-1.2,indice:40,opp:"salir",size:"pequena"},
+  ]},
+  ER: { provincia:"Entre Ríos", var_anual:2.1, var_mensual:-0.3, sectores:[
+    {codigo:"A022",nombre:"Avicultura",varA:7.8,varM:1.9,indice:90,opp:"crecer",size:"mediana"},
+    {codigo:"I551",nombre:"Turismo Termal",varA:9.1,varM:2.2,indice:65,opp:"crecer",size:"pequena"},
+    {codigo:"C101",nombre:"Industria Avícola",varA:6.9,varM:1.4,indice:88,opp:"crecer",size:"mediana"},
+    {codigo:"A011",nombre:"Agricultura – Cereales",varA:5.2,varM:0.8,indice:82,opp:"crecer",size:"mediana"},
+    {codigo:"A031",nombre:"Pesca Continental",varA:3.4,varM:0.5,indice:48,opp:"defender",size:"pequena"},
+    {codigo:"F411",nombre:"Obras Públicas",varA:4.2,varM:0.7,indice:58,opp:"defender",size:"pequena"},
+    {codigo:"C241",nombre:"Metalmecánica",varA:0.8,varM:0.1,indice:51,opp:"observar",size:"pequena"},
+    {codigo:"H491",nombre:"Transporte y Logística",varA:1.1,varM:0.2,indice:55,opp:"observar",size:"pequena"},
+    {codigo:"G471",nombre:"Comercio Minorista",varA:-2.4,varM:-0.6,indice:48,opp:"salir",size:"micro"},
+    {codigo:"C161",nombre:"Industria Forestal",varA:-2.1,varM:-0.5,indice:42,opp:"salir",size:"pequena"},
+  ]},
+  SJ: { provincia:"San Juan", var_anual:1.4, var_mensual:0.5, sectores:[
+    {codigo:"D351",nombre:"Energía Solar y Renovable",varA:15.4,varM:3.8,indice:42,opp:"crecer",size:"pequena"},
+    {codigo:"B051",nombre:"Minería – Oro y Plata",varA:12.3,varM:3.1,indice:95,opp:"crecer",size:"mediana"},
+    {codigo:"B091",nombre:"Servicios a la Minería",varA:8.1,varM:1.8,indice:72,opp:"crecer",size:"mediana"},
+    {codigo:"A013",nombre:"Olivicultura",varA:6.8,varM:1.5,indice:55,opp:"crecer",size:"pequena"},
+    {codigo:"C110",nombre:"Elaboración de Vinos",varA:5.2,varM:1.1,indice:74,opp:"crecer",size:"mediana"},
+    {codigo:"F411",nombre:"Construcción Minera",varA:7.2,varM:1.6,indice:65,opp:"crecer",size:"pequena"},
+    {codigo:"A011",nombre:"Vitivinicultura",varA:3.6,varM:0.7,indice:68,opp:"defender",size:"pequena"},
+    {codigo:"I551",nombre:"Turismo Aventura",varA:4.8,varM:1.0,indice:38,opp:"defender",size:"micro"},
+    {codigo:"G471",nombre:"Comercio Minorista",varA:-1.2,varM:-0.3,indice:44,opp:"observar",size:"micro"},
+    {codigo:"C241",nombre:"Minero-Metalurgia",varA:-3.8,varM:-0.8,indice:35,opp:"salir",size:"pequena"},
+  ]},
+  SC: { provincia:"Santa Cruz", var_anual:3.8, var_mensual:1.1, sectores:[
+    {codigo:"D351",nombre:"Energía Eólica y Renovable",varA:18.6,varM:4.2,indice:58,opp:"crecer",size:"pequena"},
+    {codigo:"B091",nombre:"Servicios Oil & Gas",varA:10.2,varM:2.5,indice:85,opp:"crecer",size:"mediana"},
+    {codigo:"B060",nombre:"Extracción Petróleo y Gas",varA:8.7,varM:2.1,indice:98,opp:"crecer",size:"mediana"},
+    {codigo:"H491",nombre:"Logística Oil & Gas",varA:7.8,varM:1.9,indice:68,opp:"crecer",size:"pequena"},
+    {codigo:"I551",nombre:"Turismo Glaciares",varA:6.2,varM:1.4,indice:52,opp:"crecer",size:"micro"},
+    {codigo:"F421",nombre:"Construcción Infraestructura",varA:5.9,varM:1.3,indice:70,opp:"crecer",size:"pequena"},
+    {codigo:"A031",nombre:"Pesca Marítima",varA:4.1,varM:0.8,indice:72,opp:"defender",size:"mediana"},
+    {codigo:"C101",nombre:"Procesamiento de Pescado",varA:3.8,varM:0.7,indice:65,opp:"defender",size:"mediana"},
+    {codigo:"A014",nombre:"Ganadería Ovina",varA:-1.4,varM:-0.3,indice:45,opp:"observar",size:"pequena"},
+    {codigo:"G471",nombre:"Comercio Minorista",varA:-0.8,varM:-0.2,indice:42,opp:"observar",size:"micro"},
+  ]},
+};
+
+function getProvData() {
+  return state.sectoresData[state.prov] || FALLBACK[state.prov];
+}
+
+function valClass(v) { return v > 1 ? 'pos' : v < -0.5 ? 'neg' : 'neu'; }
+function valSign(v)  { return v > 0 ? '+' : ''; }
+
+function oppTag(opp) {
+  const map = { crecer:'▲ CRECER', salir:'▼ SALIR', defender:'◆ DEFENDER', observar:'○ OBSERVAR' };
+  return `<span class="opp-tag ${opp}">${map[opp]||opp}</span>`;
+}
+
+function spark(prov, cod) {
+  const h = (SPARK[prov]||{})[cod] || [0,0,0,0,0,0,0,0,0,0,0,0];
+  const mx = Math.max(...h.map(Math.abs), 1);
+  return h.map(v => {
+    const ht = Math.max(3, Math.round(Math.abs(v)/mx*18));
+    return `<div class="spark-bar ${v>=0?'pos':'neg'}" style="height:${ht}px"></div>`;
+  }).join('');
+}
+
+function renderMain() {
+  const data = getProvData();
+  if (!data) { document.getElementById('mainContent').innerHTML = '<div class="loading-overlay">Sin datos disponibles</div>'; return; }
+
+  let sects = [...data.sectores];
+  if (state.opp  !== 'todas') sects = sects.filter(s => s.opp  === state.opp);
+  if (state.size !== 'todas') sects = sects.filter(s => s.size === state.size);
+
+  const mainKey = state.period === 'anual' ? 'varA' : 'varM';
+  sects.sort((a,b) => b[mainKey] - a[mainKey]);
+
+  const allSects  = data.sectores;
+  const topCrecer = allSects.filter(s => s.opp==='crecer').sort((a,b) => b.varA-a.varA).slice(0,4);
+  const topSalir  = allSects.filter(s => s.varA < 0 || s.opp==='salir').sort((a,b) => a.varA-b.varA).slice(0,4);
+
+  const vaAnual  = data.var_anual;
+  const vaMens   = data.var_mensual;
+  const vaAClass = valClass(vaAnual);
+  const vaMClass = valClass(vaMens);
+
+  // Alertas tempranas de noticias
+  const alertas = state.noticias.filter(n => n.alerta_temprana && (n.provincias||[]).includes(state.prov));
+  const alertBanner = document.getElementById('alertBanner');
+  const alertText   = document.getElementById('alertText');
+  if (alertas.length) {
+    alertBanner.classList.add('visible');
+    alertText.textContent = alertas.map(a => `${a.resumen_corto} [${a.fuente}]`).join('   ·   ');
+  } else {
+    alertBanner.classList.remove('visible');
+  }
+
+  const html = `
+    <!-- KPI ROW -->
+    <div class="kpi-row">
+      <div class="kpi-card">
+        <div class="kpi-top"><span class="kpi-icon">📈</span><span class="kpi-badge ${vaAClass}">ANUAL</span></div>
+        <div class="kpi-val ${vaAClass}">${valSign(vaAnual)}${vaAnual.toFixed(1)}%</div>
+        <div class="kpi-lbl">Var. Anual PBG · ${data.provincia}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-top"><span class="kpi-icon">📅</span><span class="kpi-badge ${vaMClass}">MENSUAL</span></div>
+        <div class="kpi-val ${vaMClass}">${valSign(vaMens)}${vaMens.toFixed(1)}%</div>
+        <div class="kpi-lbl">Var. Mensual · Últ. dato</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-top"><span class="kpi-icon">🏭</span><span class="kpi-badge neu">SECTORES</span></div>
+        <div class="kpi-val info">${allSects.length}</div>
+        <div class="kpi-lbl">Actividades SEPyME activas</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-top"><span class="kpi-icon">⚠</span><span class="kpi-badge neg">ALERTAS</span></div>
+        <div class="kpi-val ${alertas.length ? 'neg' : 'pos'}">${alertas.length}</div>
+        <div class="kpi-lbl">Alertas tempranas activas</div>
+      </div>
+    </div>
+
+    <!-- OPORTUNIDADES -->
+    <div class="sec-hdr">
+      <div class="sec-title"><em>01</em> FOCO COMERCIAL · ACCIONES PRIORITARIAS</div>
+    </div>
+    <div class="opp-split">
+      <div class="opp-panel crecer">
+        <div class="opp-title crecer">▲ SECTORES PARA CRECER</div>
+        ${topCrecer.map(s=>`
+          <div class="opp-row">
+            <div class="opp-row-name">${s.nombre}</div>
+            <div class="opp-row-vals tv-pos">+${s.varA.toFixed(1)}% / +${s.varM.toFixed(1)}%</div>
+          </div>`).join('')}
+      </div>
+      <div class="opp-panel salir">
+        <div class="opp-title salir">▼ SECTORES PARA REDUCIR / SALIR</div>
+        ${topSalir.map(s=>`
+          <div class="opp-row">
+            <div class="opp-row-name">${s.nombre}</div>
+            <div class="opp-row-vals ${s.varA<0?'tv-neg':'tv-neu'}">${valSign(s.varA)}${s.varA.toFixed(1)}% / ${valSign(s.varM)}${s.varM.toFixed(1)}%</div>
+          </div>`).join('')}
+      </div>
+    </div>
+
+    <!-- FILTERS + CARDS -->
+    <div class="sec-hdr">
+      <div class="sec-title"><em>02</em> DETALLE POR ACTIVIDAD</div>
+      <div class="period-toggle">
+        <button class="pt-btn ${state.period==='anual'?'active':''}" onclick="setPeriod('anual')">ANUAL</button>
+        <button class="pt-btn ${state.period==='mensual'?'active':''}" onclick="setPeriod('mensual')">MENSUAL</button>
+      </div>
+    </div>
+
+    <div class="chips">
+      ${['todas','crecer','defender','observar','salir'].map(o=>`
+        <button class="chip ${state.opp===o?'active':''}" onclick="setChip('${o}')">${
+          {todas:'Todas',crecer:'▲ Crecer',defender:'◆ Defender',observar:'○ Observar',salir:'▼ Salir'}[o]
+        }</button>`).join('')}
+    </div>
+
+    <div class="sector-grid">
+      ${sects.map(s => {
+        const v  = state.period==='anual' ? s.varA : s.varM;
+        const vc = valClass(v);
+        const topCard   = s.opp==='crecer' ? 'top' : '';
+        const alertCard = s.opp==='salir'  ? 'alert-card' : '';
+        return `
+        <div class="sc ${s.opp} ${topCard} ${alertCard}">
+          <div class="sc-top">
+            <div class="sc-name">${s.nombre}</div>
+            <div class="sc-code">${s.codigo}</div>
+          </div>
+          <div class="sc-metrics">
+            <div>
+              <div class="sc-m-val ${valClass(s.varA)}">${valSign(s.varA)}${s.varA.toFixed(1)}%</div>
+              <div class="sc-m-lbl">Var. Anual</div>
+            </div>
+            <div>
+              <div class="sc-m-val ${valClass(s.varM)}">${valSign(s.varM)}${s.varM.toFixed(1)}%</div>
+              <div class="sc-m-lbl">Var. Mens.</div>
+            </div>
+            <div>
+              <div class="sc-m-val" style="color:var(--cyan)">${s.indice}</div>
+              <div class="sc-m-lbl">Índice</div>
+            </div>
+          </div>
+          <div class="sparkline">${spark(state.prov, s.codigo)}</div>
+          <div class="sc-footer">${oppTag(s.opp)}<span class="sc-size">${s.size}</span></div>
+        </div>`;
+      }).join('')}
+    </div>
+
+    <!-- TABLA RESUMEN -->
+    <div class="sec-hdr"><div class="sec-title"><em>03</em> MATRIZ COMPLETA DE ACTIVIDADES</div></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>Actividad</th><th>Cód.</th><th>Tamaño</th>
+          <th>Var. Anual</th><th>Var. Mensual</th><th>Índice</th><th>Acción</th>
+        </tr></thead>
+        <tbody>
+          ${allSects.sort((a,b)=>b.varA-a.varA).map(s=>`
+          <tr>
+            <td>${s.nombre}</td>
+            <td style="color:var(--muted)">${s.codigo}</td>
+            <td style="color:var(--muted);text-align:center">${s.size}</td>
+            <td class="${valClass(s.varA)==='pos'?'tv-pos':valClass(s.varA)==='neg'?'tv-neg':'tv-neu'}">${valSign(s.varA)}${s.varA.toFixed(1)}%</td>
+            <td class="${valClass(s.varM)==='pos'?'tv-pos':valClass(s.varM)==='neg'?'tv-neg':'tv-neu'}">${valSign(s.varM)}${s.varM.toFixed(1)}%</td>
+            <td style="color:var(--cyan)">${s.indice}</td>
+            <td style="text-align:center">${oppTag(s.opp)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════
+// NOTICIAS
+// ═══════════════════════════════════════════════════════
+function renderNoticias() {
+  let items = [...state.noticias];
+  const prov = state.prov;
+
+  if (state.newsFilter === 'alertas') items = items.filter(n => n.alerta_temprana);
+  else if (state.newsFilter === 'crecer') items = items.filter(n => n.sentimiento === 'positivo');
+  else if (state.newsFilter === 'prov')   items = items.filter(n => (n.provincias||[]).includes(prov));
+
+  document.getElementById('newsCount').textContent = items.length;
+
+  if (!items.length) {
+    document.getElementById('newsList').innerHTML = '<div class="news-empty">Sin noticias para el filtro seleccionado</div>';
+    return;
+  }
+
+  document.getElementById('newsList').innerHTML = items.slice(0,30).map(n => {
+    const cls = n.alerta_temprana ? 'alerta' : n.sentimiento === 'positivo' ? 'pos-card' : '';
+    const fecha = n.fecha ? new Date(n.fecha).toLocaleDateString('es-AR', {day:'2-digit',month:'2-digit'}) : '';
+    const provBadges = (n.provincias||[]).map(p=>`<span class="nc-prov">${p}</span>`).join('');
+    return `
+    <div class="news-card ${cls}" onclick="window.open('${n.link}','_blank')">
+      <div class="nc-top">
+        <div class="nc-titulo">${n.titulo}</div>
+        <div class="nc-sent ${n.sentimiento}"></div>
+      </div>
+      ${n.resumen_corto ? `<div class="nc-resumen">${n.resumen_corto}</div>` : ''}
+      <div class="nc-footer">
+        <span class="nc-sector">${n.sector}</span>
+        ${provBadges}
+        ${n.alerta_temprana ? '<span class="nc-alerta">⚠ ALERTA</span>' : ''}
+        <span class="nc-fuente">${n.fuente}</span>
+        <span class="nc-date">${fecha}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterNews(f) {
+  state.newsFilter = f;
+  ['todas','alertas','crecer','prov'].forEach(x => {
+    document.getElementById(`nf${x.charAt(0).toUpperCase()+x.slice(1)}`).classList.toggle('active', x===f);
+  });
+  renderNoticias();
+}
+
+// ═══════════════════════════════════════════════════════
+// CONTROLS
+// ═══════════════════════════════════════════════════════
+function setProv(p) {
+  state.prov = p;
+  ['SF','ER','SJ','SC'].forEach(x => document.getElementById(`pb${x}`).classList.toggle('active', x===p));
+  document.getElementById('filterOpp').value  = 'todas';
+  document.getElementById('filterSize').value = 'todas';
+  state.opp  = 'todas';
+  state.size = 'todas';
+  loadProv(p);
+}
+
+function applyFilters() {
+  state.opp  = document.getElementById('filterOpp').value;
+  state.size = document.getElementById('filterSize').value;
+  renderMain();
+}
+
+function setChip(opp) {
+  state.opp = opp;
+  document.getElementById('filterOpp').value = opp;
+  renderMain();
+}
+
+function setPeriod(p) {
+  state.period = p;
+  renderMain();
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+(async () => {
+  // Render inmediato con datos fallback
+  renderMain();
+
+  // Fetch async en paralelo
+  refreshAll();
+
+  // Auto-refresh cada 15 minutos
+  setInterval(refreshAll, 15 * 60 * 1000);
+})();
+</script>
+</body>
+</html>
