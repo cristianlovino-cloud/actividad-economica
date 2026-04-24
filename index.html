@@ -2,988 +2,537 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ECO RADAR v2 | Grupo Petersen</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#3b82f6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ECO RADAR">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>ECO RADAR | Grupo Petersen</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg:#08090b; --s1:#0e1117; --s2:#141921; --s3:#1a2332;
-  --border:#1c2635; --border2:#253347;
-  --accent:#3b82f6; --cyan:#06b6d4; --green:#22c55e;
-  --red:#ef4444; --orange:#f97316; --yellow:#eab308; --purple:#a855f7;
-  --text:#e2e8f0; --muted:#4a6080; --dim:#1e2d3e;
-}
+:root{--bg:#08090b;--s1:#0e1117;--s2:#141921;--border:#1c2635;--border2:#253347;--accent:#3b82f6;--cyan:#06b6d4;--green:#22c55e;--red:#ef4444;--orange:#f97316;--yellow:#eab308;--purple:#a855f7;--text:#e2e8f0;--muted:#4a6080;--dim:#1e2d3e;--sh:rgba(0,0,0,.4);--ticker-bg:#060a10}
+@media(prefers-color-scheme:light){:root{--bg:#f0f4f8;--s1:#fff;--s2:#e8eef5;--border:#d1dce8;--border2:#b8c8d8;--text:#0f172a;--muted:#64748b;--dim:#e2eaf2;--sh:rgba(0,0,0,.1);--ticker-bg:#1e3a5f}}
+html.dark{--bg:#08090b;--s1:#0e1117;--s2:#141921;--border:#1c2635;--border2:#253347;--text:#e2e8f0;--muted:#4a6080;--dim:#1e2d3e;--sh:rgba(0,0,0,.4);--ticker-bg:#060a10}
+html.light{--bg:#f0f4f8;--s1:#fff;--s2:#e8eef5;--border:#d1dce8;--border2:#b8c8d8;--text:#0f172a;--muted:#64748b;--dim:#e2eaf2;--sh:rgba(0,0,0,.1);--ticker-bg:#1e3a5f}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.5;min-height:100vh}
-
-/* ── TICKER ── */
-.ticker{background:#060a10;border-bottom:1px solid var(--border);height:32px;overflow:hidden;display:flex;align-items:center}
-.ticker-label{background:var(--accent);color:#fff;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;padding:0 12px;height:100%;display:flex;align-items:center;flex-shrink:0;white-space:nowrap}
-.ticker-track{display:flex;gap:0;flex:1;overflow:hidden}
-.ticker-inner{display:flex;gap:0;animation:ticker 45s linear infinite;white-space:nowrap}
-@keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
-.tick-item{display:flex;align-items:center;gap:5px;padding:0 20px;border-right:1px solid var(--border);height:32px;font-family:'DM Mono',monospace;font-size:10px}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.5;min-height:100vh;-webkit-tap-highlight-color:transparent}
+.ticker{background:var(--ticker-bg);border-bottom:1px solid var(--border);height:28px;overflow:hidden;display:flex;align-items:center;position:sticky;top:0;z-index:300}
+.ticker-label{background:var(--accent);color:#fff;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;padding:0 8px;height:100%;display:flex;align-items:center;flex-shrink:0}
+.ticker-track{flex:1;overflow:hidden}
+.ticker-inner{display:flex;animation:tkr 60s linear infinite;white-space:nowrap}
+@keyframes tkr{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.tick-item{display:inline-flex;align-items:center;gap:4px;padding:0 12px;border-right:1px solid var(--border);height:28px;font-family:'DM Mono',monospace;font-size:9px}
 .tick-lbl{color:var(--muted)}
-.tick-val{font-weight:500}
-.tick-val.pos{color:var(--green)} .tick-val.neg{color:var(--red)} .tick-val.neu{color:var(--yellow)} .tick-val.info{color:var(--cyan)}
-
-/* ── TOPBAR ── */
-.topbar{background:var(--s1);border-bottom:1px solid var(--border);height:48px;display:flex;align-items:center;padding:0 16px;gap:12px;position:sticky;top:32px;z-index:200}
-.brand{font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:2.5px;color:var(--accent);white-space:nowrap}
-.topbar-divider{width:1px;height:22px;background:var(--border2)}
-.tab-nav{display:flex;gap:2px}
-.tab-btn{padding:5px 12px;border:none;background:none;color:var(--muted);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;border-radius:3px;cursor:pointer;transition:all .15s;text-transform:uppercase}
-.tab-btn:hover{color:var(--text);background:var(--s2)}
+.pos{color:var(--green)}.neg{color:var(--red)}.neu{color:var(--yellow)}.info{color:var(--cyan)}
+.topbar{background:var(--s1);border-bottom:1px solid var(--border);height:46px;display:flex;align-items:center;padding:0 10px;gap:6px;position:sticky;top:28px;z-index:200;box-shadow:0 2px 8px var(--sh)}
+.brand{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;color:var(--accent);white-space:nowrap}
+.tab-nav{display:flex;gap:1px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex:1;padding:2px 0}
+.tab-nav::-webkit-scrollbar{display:none}
+.tab-btn{padding:4px 9px;border:none;background:none;color:var(--muted);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.8px;border-radius:3px;cursor:pointer;text-transform:uppercase;white-space:nowrap;flex-shrink:0;transition:all .15s}
 .tab-btn.active{background:var(--accent);color:#fff}
-.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
-.last-update{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)}
-.refresh-btn{background:none;border:1px solid var(--border2);color:var(--muted);font-family:'DM Mono',monospace;font-size:9px;padding:4px 9px;border-radius:3px;cursor:pointer;transition:all .15s}
-.refresh-btn:hover{border-color:var(--accent);color:var(--accent)}
-
-/* ── ALERT BANNER ── */
-.alert-banner{background:rgba(239,68,68,.08);border-bottom:1px solid rgba(239,68,68,.25);padding:5px 16px;display:none;align-items:center;gap:8px;font-size:11px;color:var(--red)}
+.topbar-right{display:flex;align-items:center;gap:5px;flex-shrink:0}
+.icon-btn{background:none;border:1px solid var(--border2);color:var(--muted);font-size:13px;width:28px;height:28px;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.install-banner{background:linear-gradient(135deg,rgba(59,130,246,.15),rgba(6,182,212,.15));border-bottom:1px solid var(--accent);padding:8px 14px;display:none;align-items:center;justify-content:space-between;gap:10px}
+.install-banner.visible{display:flex}
+.install-txt{font-size:12px;color:var(--text)}.install-txt span{color:var(--accent);font-weight:600}
+.install-btn{background:var(--accent);color:#fff;border:none;padding:5px 12px;border-radius:4px;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;white-space:nowrap}
+.install-close{background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:0 4px}
+.alert-banner{background:rgba(239,68,68,.08);border-bottom:1px solid rgba(239,68,68,.25);padding:4px 12px;display:none;align-items:center;gap:6px;font-size:10px;color:var(--red)}
 .alert-banner.visible{display:flex}
-.alert-pill{background:var(--red);color:#fff;font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1px;padding:1px 6px;border-radius:2px;flex-shrink:0}
+.alert-pill{background:var(--red);color:#fff;font-family:'DM Mono',monospace;font-size:7px;padding:1px 4px;border-radius:2px;flex-shrink:0}
 .alert-scroll{overflow:hidden;flex:1}
-.alert-scroll span{display:inline-block;animation:scrollLeft 35s linear infinite}
-@keyframes scrollLeft{from{transform:translateX(60vw)}to{transform:translateX(-100%)}}
-
-/* ── LAYOUT ── */
-.layout{display:grid;grid-template-columns:210px 1fr 290px;min-height:calc(100vh - 80px)}
-
-/* ── SIDEBAR ── */
-.sidebar{background:var(--s1);border-right:1px solid var(--border);padding:14px 0;position:sticky;top:80px;height:calc(100vh - 80px);overflow-y:auto;display:flex;flex-direction:column}
-.sb-sec{padding:0 12px 12px;border-bottom:1px solid var(--border);margin-bottom:12px}
-.sb-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:7px}
-.prov-card{display:flex;align-items:center;justify-content:space-between;padding:8px 9px;border:1px solid transparent;border-radius:4px;cursor:pointer;margin-bottom:3px;transition:all .15s;background:none;width:100%;text-align:left;color:var(--text)}
-.prov-card:hover{background:var(--s2);border-color:var(--border2)}
-.prov-card.active{background:rgba(59,130,246,.12);border-color:var(--accent)}
-.pc-left{display:flex;align-items:center;gap:7px}
-.pc-badge{font-family:'DM Mono',monospace;font-size:9px;background:var(--dim);padding:2px 5px;border-radius:2px;color:var(--muted)}
+.alert-scroll span{display:inline-block;animation:scrl 30s linear infinite}
+@keyframes scrl{from{transform:translateX(60vw)}to{transform:translateX(-100%)}}
+.layout{display:flex;flex-direction:column}
+@media(min-width:900px){.layout{display:grid;grid-template-columns:195px 1fr 275px;min-height:calc(100vh - 74px)}}
+.sidebar{background:var(--s1);border-bottom:1px solid var(--border);padding:8px 10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+@media(min-width:900px){.sidebar{flex-direction:column;flex-wrap:nowrap;border-bottom:none;border-right:1px solid var(--border);padding:12px 0;position:sticky;top:74px;height:calc(100vh - 74px);overflow-y:auto;gap:0}}
+.sb-sec{padding:0 11px 11px;border-bottom:1px solid var(--border);margin-bottom:11px}
+.sb-lbl{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;display:none}
+@media(min-width:900px){.sb-lbl{display:block}}
+.prov-card{display:flex;align-items:center;gap:5px;padding:5px 9px;border:1px solid var(--border);border-radius:20px;cursor:pointer;background:none;color:var(--text);font-size:11px;transition:all .15s;flex-shrink:0}
+.prov-card.active{background:var(--accent);border-color:var(--accent);color:#fff}
+@media(min-width:900px){.prov-card{border-radius:4px;padding:7px 9px;width:100%;justify-content:space-between;border-color:transparent;margin-bottom:2px}.prov-card.active{background:rgba(59,130,246,.12);border-color:var(--accent);color:var(--text)}}
+.pc-left{display:flex;align-items:center;gap:5px}
+.pc-badge{font-family:'DM Mono',monospace;font-size:8px;background:var(--dim);padding:1px 4px;border-radius:2px;color:var(--muted)}
 .prov-card.active .pc-badge{background:rgba(59,130,246,.2);color:var(--accent)}
-.pc-name{font-size:12px;font-weight:500}
-.pc-var{font-family:'DM Mono',monospace;font-size:10px}
-.filter-row{margin-bottom:7px}
-.filter-lbl{font-size:10px;color:var(--muted);margin-bottom:3px}
-.filter-sel{width:100%;background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:10px;padding:5px 7px;border-radius:3px;cursor:pointer}
-.leg-row{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted);margin-bottom:4px}
-.leg-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-
-/* ── MAIN ── */
-.main{padding:16px;overflow-y:auto}
-.tab-content{display:none} .tab-content.active{display:block}
-
-/* ── MACRO PANEL ── */
-.macro-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
-.macro-row2{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
-
-.mc{background:var(--s1);border:1px solid var(--border);border-radius:5px;padding:11px 13px;position:relative;overflow:hidden}
-.mc::after{content:'';position:absolute;top:0;left:0;right:0;height:2px}
-.mc.tipo-cambio::after{background:var(--cyan)}
-.mc.inflacion::after{background:var(--red)}
-.mc.tasa::after{background:var(--yellow)}
-.mc.externo::after{background:var(--green)}
-.mc.riesgo::after{background:var(--purple)}
-.mc.actividad::after{background:var(--accent)}
-
-.mc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
-.mc-ico{font-size:14px}
-.mc-tag{font-family:'DM Mono',monospace;font-size:8px;padding:1px 5px;border-radius:2px;text-transform:uppercase;letter-spacing:.5px}
-.mc-tag.cyan{background:rgba(6,182,212,.15);color:var(--cyan)}
-.mc-tag.red{background:rgba(239,68,68,.15);color:var(--red)}
-.mc-tag.yellow{background:rgba(234,179,8,.15);color:var(--yellow)}
-.mc-tag.green{background:rgba(34,197,94,.15);color:var(--green)}
-.mc-tag.purple{background:rgba(168,85,247,.15);color:var(--purple)}
-.mc-tag.blue{background:rgba(59,130,246,.15);color:var(--accent)}
-
-.mc-val{font-family:'DM Mono',monospace;font-size:20px;font-weight:500;margin-bottom:1px}
-.mc-val.pos{color:var(--green)} .mc-val.neg{color:var(--red)} .mc-val.neu{color:var(--yellow)} .mc-val.info{color:var(--cyan)}
-.mc-lbl{font-size:10px;color:var(--muted)}
-.mc-sub{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-top:3px}
-.mc-delta{font-family:'DM Mono',monospace;font-size:10px;float:right}
-
-/* PRECIOS INTERNACIONALES */
-.precios-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:14px}
-.precio-card{background:var(--s1);border:1px solid var(--border);border-radius:5px;padding:10px 12px;text-align:center}
-.precio-ico{font-size:18px;margin-bottom:3px}
-.precio-nombre{font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
-.precio-val{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;margin-bottom:2px}
-.precio-var{font-family:'DM Mono',monospace;font-size:9px}
-
-/* RIESGO CREDITICIO */
-.riesgo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin-bottom:16px}
-.rc{background:var(--s1);border:1px solid var(--border);border-left:3px solid;border-radius:5px;padding:12px 14px}
-.rc.bajo{border-left-color:var(--green)}
-.rc.medio{border-left-color:var(--yellow)}
-.rc.alto{border-left-color:var(--red)}
-.rc.critico{border-left-color:var(--purple);background:rgba(168,85,247,.04)}
-
-.rc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px}
-.rc-nombre{font-size:12px;font-weight:500;line-height:1.3}
-.rc-nivel{font-family:'DM Mono',monospace;font-size:9px;padding:2px 6px;border-radius:2px;text-transform:uppercase}
-.rc-nivel.bajo{background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.25)}
-.rc-nivel.medio{background:rgba(234,179,8,.12);color:var(--yellow);border:1px solid rgba(234,179,8,.25)}
-.rc-nivel.alto{background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.25)}
-.rc-nivel.critico{background:rgba(168,85,247,.12);color:var(--purple);border:1px solid rgba(168,85,247,.25)}
-
-.rc-metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px}
-.rc-m-val{font-family:'DM Mono',monospace;font-size:13px;font-weight:500}
-.rc-m-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
-.rc-drivers{font-size:11px;color:var(--muted);line-height:1.5;border-top:1px solid var(--border);padding-top:7px}
-.rc-drivers strong{color:var(--text);font-weight:500}
-
-/* SEÑALES ADELANTADAS */
-.senales-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
-.senal{background:var(--s1);border:1px solid var(--border);border-radius:5px;padding:11px 13px}
-.senal-top{display:flex;align-items:center;gap:6px;margin-bottom:6px}
-.senal-ico{font-size:16px}
-.senal-nombre{font-size:11px;color:var(--muted)}
-.senal-val{font-family:'DM Mono',monospace;font-size:18px;font-weight:500;margin-bottom:2px}
-.senal-trend{font-family:'DM Mono',monospace;font-size:9px}
-.senal-desc{font-size:10px;color:var(--muted)}
-
-/* ── SECTOR CARDS (igual que v1) ── */
-.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:7px;border-bottom:1px solid var(--border)}
-.sec-title{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;display:flex;align-items:center;gap:5px}
-.sec-title em{color:var(--accent);font-style:normal}
-.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
-.kpi-card{background:var(--s1);border:1px solid var(--border);border-radius:5px;padding:11px 13px}
-.kpi-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
-.kpi-ico{font-size:14px}
-.kpi-badge{font-family:'DM Mono',monospace;font-size:8px;padding:1px 5px;border-radius:2px}
-.kpi-badge.pos{background:rgba(34,197,94,.15);color:var(--green)}
-.kpi-badge.neg{background:rgba(239,68,68,.15);color:var(--red)}
-.kpi-badge.neu{background:rgba(234,179,8,.15);color:var(--yellow)}
-.kpi-val{font-family:'DM Mono',monospace;font-size:20px;font-weight:500;margin-bottom:1px}
-.kpi-val.pos{color:var(--green)} .kpi-val.neg{color:var(--red)} .kpi-val.neu{color:var(--yellow)} .kpi-val.info{color:var(--cyan)}
-.kpi-lbl{font-size:10px;color:var(--muted)}
-.opp-split{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
-.opp-panel{background:var(--s1);border:1px solid var(--border);border-radius:5px;padding:13px}
-.opp-panel.crecer{border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.04)}
-.opp-panel.salir{border-color:rgba(249,115,22,.3);background:rgba(249,115,22,.04)}
-.opp-title{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;margin-bottom:9px}
-.opp-title.crecer{color:var(--green)} .opp-title.salir{color:var(--orange)}
-.opp-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:11px;gap:5px}
-.opp-row:last-child{border-bottom:none}
-.opp-row-name{flex:1;color:var(--text);line-height:1.3}
-.opp-row-vals{font-family:'DM Mono',monospace;font-size:11px;white-space:nowrap;text-align:right}
-.chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px}
-.chip{padding:3px 10px;border:1px solid var(--border);background:var(--s1);color:var(--muted);font-family:'DM Mono',monospace;font-size:9px;border-radius:20px;cursor:pointer;transition:all .12s;letter-spacing:.5px;text-transform:uppercase}
-.chip:hover{border-color:var(--accent);color:var(--accent)}
-.chip.active{background:var(--accent);color:#fff;border-color:var(--accent)}
-.period-toggle{display:flex;background:var(--s2);border:1px solid var(--border);border-radius:4px;padding:2px;gap:2px}
-.pt-btn{padding:3px 9px;border:none;background:none;color:var(--muted);font-family:'DM Mono',monospace;font-size:9px;border-radius:2px;cursor:pointer;transition:all .12s}
-.pt-btn.active{background:var(--accent);color:#fff;font-weight:600}
-.sector-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:9px;margin-bottom:18px}
-.sc{background:var(--s1);border:1px solid var(--border);border-left:3px solid;border-radius:4px;padding:11px 13px;transition:background .15s;animation:fadeUp .3s ease both}
+@media(max-width:899px){.prov-card.active .pc-badge{background:rgba(255,255,255,.2);color:#fff}}
+.pc-name{font-size:11px;font-weight:500}.pc-var{font-family:'DM Mono',monospace;font-size:9px}
+@media(max-width:899px){.pc-var{display:none}}
+.sb-filters{display:none}
+@media(min-width:900px){.sb-filters{display:block;padding:0 11px}}
+.f-row{margin-bottom:6px}.f-lbl{font-size:10px;color:var(--muted);margin-bottom:2px}
+.f-sel{width:100%;background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:'DM Mono',monospace;font-size:9px;padding:4px 6px;border-radius:3px;cursor:pointer}
+.main{padding:10px;flex:1}
+@media(min-width:600px){.main{padding:14px}}
+.tab-content{display:none}.tab-content.active{display:block}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:10px}
+.g4{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px}
+@media(min-width:600px){.g4{grid-template-columns:repeat(4,1fr)}}
+.g6{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:10px}
+@media(min-width:600px){.g6{grid-template-columns:repeat(6,1fr)}}
+.g-split{display:grid;grid-template-columns:1fr;gap:7px;margin-bottom:10px}
+@media(min-width:600px){.g-split{grid-template-columns:1fr 1fr}}
+.g-sec{display:grid;grid-template-columns:1fr;gap:7px;margin-bottom:14px}
+@media(min-width:500px){.g-sec{grid-template-columns:1fr 1fr}}
+@media(min-width:900px){.g-sec{grid-template-columns:repeat(auto-fill,minmax(255px,1fr))}}
+.g-risk{display:grid;grid-template-columns:1fr;gap:7px;margin-bottom:12px}
+@media(min-width:600px){.g-risk{grid-template-columns:1fr 1fr}}
+.sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.st{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;display:flex;align-items:center;gap:4px}
+.st em{color:var(--accent);font-style:normal}
+.card{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:10px 12px;box-shadow:0 1px 3px var(--sh);transition:background .2s}
+.card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.card-ico{font-size:13px}
+.tag{font-family:'DM Mono',monospace;font-size:7px;padding:1px 4px;border-radius:2px;text-transform:uppercase;letter-spacing:.5px}
+.tag-cyan{background:rgba(6,182,212,.15);color:var(--cyan)}.tag-red{background:rgba(239,68,68,.15);color:var(--red)}
+.tag-yellow{background:rgba(234,179,8,.15);color:var(--yellow)}.tag-green{background:rgba(34,197,94,.15);color:var(--green)}
+.tag-purple{background:rgba(168,85,247,.15);color:var(--purple)}.tag-blue{background:rgba(59,130,246,.15);color:var(--accent)}
+.tag-orange{background:rgba(249,115,22,.15);color:var(--orange)}
+.card-val{font-family:'DM Mono',monospace;font-size:17px;font-weight:500;margin-bottom:1px}
+@media(min-width:600px){.card-val{font-size:19px}}
+.card-lbl{font-size:9px;color:var(--muted)}.card-sub{font-family:'DM Mono',monospace;font-size:8px;color:var(--muted);margin-top:2px}
+.card-stripe{position:relative;overflow:hidden}.card-stripe::after{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.stripe-cyan::after{background:var(--cyan)}.stripe-red::after{background:var(--red)}.stripe-yellow::after{background:var(--yellow)}
+.stripe-green::after{background:var(--green)}.stripe-purple::after{background:var(--purple)}.stripe-blue::after{background:var(--accent)}.stripe-orange::after{background:var(--orange)}
+.comm-card{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center;box-shadow:0 1px 3px var(--sh)}
+.comm-ico{font-size:22px;margin-bottom:3px}.comm-name{font-size:8px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.comm-val{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:var(--cyan);margin-bottom:2px}
+.comm-var{font-family:'DM Mono',monospace;font-size:9px}
+.comm-loading{opacity:.4;animation:pulse 1.5s ease infinite}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:.8}}
+.mora-card{background:var(--s1);border:1px solid var(--border);border-left:3px solid;border-radius:6px;padding:11px 13px;box-shadow:0 1px 3px var(--sh)}
+.mora-card.familias{border-left-color:var(--accent)}.mora-card.empresas{border-left-color:var(--purple)}
+.mora-card.pymes{border-left-color:var(--yellow)}.mora-card.total{border-left-color:var(--muted)}
+.mora-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.mora-nombre{font-size:12px;font-weight:600;color:var(--text)}
+.mora-val{font-family:'DM Mono',monospace;font-size:22px;font-weight:500;margin-bottom:3px}
+.mora-desc{font-size:10px;color:var(--muted);margin-bottom:8px}
+.mora-bar-bg{background:var(--s2);border-radius:3px;height:6px;overflow:hidden;margin-bottom:6px}
+.mora-bar{height:100%;border-radius:3px;transition:width 1s ease}
+.mora-meta{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px}
+.mora-kpi-val{font-family:'DM Mono',monospace;font-size:11px;font-weight:500}
+.mora-kpi-lbl{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
+.tasa-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)}
+.tasa-row:last-child{border-bottom:none}
+.tasa-nombre{font-size:12px;color:var(--text);flex:1}.tasa-desc{font-size:10px;color:var(--muted)}
+.tasa-vals{text-align:right}
+.tasa-tna{font-family:'DM Mono',monospace;font-size:14px;font-weight:500}
+.tasa-tea{font-family:'DM Mono',monospace;font-size:9px;color:var(--muted)}
+.sc{background:var(--s1);border:1px solid var(--border);border-left:3px solid;border-radius:6px;padding:10px 12px;transition:background .15s;animation:fu .3s ease both;box-shadow:0 1px 3px var(--sh)}
 .sc:hover{background:var(--s2)}
-.sc.crecer{border-left-color:var(--green)} .sc.salir{border-left-color:var(--red)}
-.sc.defender{border-left-color:var(--yellow)} .sc.observar{border-left-color:var(--muted)}
-.sc.top{border-color:var(--green);background:rgba(34,197,94,.04);box-shadow:0 0 15px rgba(34,197,94,.06)}
-.sc.alert-card{border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.04)}
-@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.sc:nth-child(1){animation-delay:.03s}.sc:nth-child(2){animation-delay:.06s}.sc:nth-child(3){animation-delay:.09s}
-.sc:nth-child(4){animation-delay:.12s}.sc:nth-child(5){animation-delay:.15s}.sc:nth-child(6){animation-delay:.18s}
-.sc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:7px;gap:5px}
-.sc-name{font-size:12px;font-weight:500;color:var(--text);line-height:1.3}
-.sc-code{font-family:'DM Mono',monospace;font-size:9px;background:var(--dim);padding:2px 5px;border-radius:2px;color:var(--muted);flex-shrink:0}
-.sc-metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:7px}
-.sc-m-val{font-family:'DM Mono',monospace;font-size:13px;font-weight:500}
-.sc-m-val.pos{color:var(--green)} .sc-m-val.neg{color:var(--red)} .sc-m-val.neu{color:var(--yellow)}
-.sc-m-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
-.sparkline{display:flex;gap:2px;height:18px;align-items:flex-end;margin-bottom:7px}
-.spark-bar{flex:1;border-radius:1px;min-height:2px}
-.spark-bar.pos{background:rgba(34,197,94,.5)} .spark-bar.neg{background:rgba(239,68,68,.5)}
-.sc-footer{display:flex;align-items:center;justify-content:space-between}
-.opp-tag{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1px;padding:2px 6px;border-radius:2px;text-transform:uppercase}
-.opp-tag.crecer{background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.3)}
-.opp-tag.salir{background:rgba(249,115,22,.12);color:var(--orange);border:1px solid rgba(249,115,22,.3)}
-.opp-tag.defender{background:rgba(234,179,8,.12);color:var(--yellow);border:1px solid rgba(234,179,8,.3)}
-.opp-tag.observar{background:rgba(74,96,128,.12);color:var(--muted);border:1px solid rgba(74,96,128,.3)}
-.sc-size{font-size:9px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase}
-.tbl-wrap{background:var(--s1);border:1px solid var(--border);border-radius:5px;overflow:auto;margin-bottom:16px}
-table{width:100%;border-collapse:collapse;font-size:11px}
-thead th{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;padding:7px 10px;text-align:right;border-bottom:1px solid var(--border);white-space:nowrap}
+.sc.crecer{border-left-color:var(--green)}.sc.salir{border-left-color:var(--red)}.sc.defender{border-left-color:var(--yellow)}.sc.observar{border-left-color:var(--muted)}
+.sc.top{border-color:var(--green);background:rgba(34,197,94,.04)}.sc.alert-card{border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.04)}
+@keyframes fu{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.sc:nth-child(1){animation-delay:.03s}.sc:nth-child(2){animation-delay:.06s}.sc:nth-child(3){animation-delay:.09s}.sc:nth-child(4){animation-delay:.12s}
+.sc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;gap:4px}
+.sc-name{font-size:11px;font-weight:500;color:var(--text);line-height:1.3}
+.sc-code{font-family:'DM Mono',monospace;font-size:8px;background:var(--dim);padding:1px 4px;border-radius:2px;color:var(--muted);flex-shrink:0}
+.sc-m{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:6px}
+.sc-mv{font-family:'DM Mono',monospace;font-size:12px;font-weight:500}
+.sc-ml{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
+.spk{display:flex;gap:2px;height:14px;align-items:flex-end;margin-bottom:6px}
+.sb{flex:1;border-radius:1px;min-height:2px}
+.sb.pos{background:rgba(34,197,94,.5)}.sb.neg{background:rgba(239,68,68,.5)}
+.sc-ft{display:flex;align-items:center;justify-content:space-between}
+.ot{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.5px;padding:2px 5px;border-radius:2px;text-transform:uppercase}
+.ot.crecer{background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.3)}
+.ot.salir{background:rgba(249,115,22,.12);color:var(--orange);border:1px solid rgba(249,115,22,.3)}
+.ot.defender{background:rgba(234,179,8,.12);color:var(--yellow);border:1px solid rgba(234,179,8,.3)}
+.ot.observar{background:rgba(74,96,128,.12);color:var(--muted);border:1px solid rgba(74,96,128,.3)}
+.sc-sz{font-size:8px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase}
+.kpi-row{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px}
+@media(min-width:600px){.kpi-row{grid-template-columns:repeat(4,1fr)}}
+.chips{display:flex;gap:5px;flex-wrap:nowrap;margin-bottom:9px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px}
+.chip{padding:4px 10px;border:1px solid var(--border);background:var(--s1);color:var(--muted);font-family:'DM Mono',monospace;font-size:8px;border-radius:20px;cursor:pointer;letter-spacing:.5px;text-transform:uppercase;white-space:nowrap;flex-shrink:0}
+.chip.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.pt{display:flex;background:var(--s2);border:1px solid var(--border);border-radius:4px;padding:2px;gap:2px;flex-shrink:0}
+.ptb{padding:3px 8px;border:none;background:none;color:var(--muted);font-family:'DM Mono',monospace;font-size:8px;border-radius:2px;cursor:pointer}
+.ptb.active{background:var(--accent);color:#fff;font-weight:600}
+.opp-panel{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:11px;box-shadow:0 1px 3px var(--sh)}
+.opp-panel.crecer{border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.04)}.opp-panel.salir{border-color:rgba(249,115,22,.3);background:rgba(249,115,22,.04)}
+.opp-title{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;margin-bottom:8px}
+.opp-title.crecer{color:var(--green)}.opp-title.salir{color:var(--orange)}
+.opp-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:10px;gap:4px}
+.opp-row:last-child{border-bottom:none}.opp-rn{flex:1;color:var(--text);line-height:1.3}
+.opp-rv{font-family:'DM Mono',monospace;font-size:10px;white-space:nowrap;text-align:right}
+.tbl-wrap{background:var(--s1);border:1px solid var(--border);border-radius:8px;overflow:auto;margin-bottom:12px;box-shadow:0 1px 3px var(--sh)}
+table{width:100%;border-collapse:collapse;font-size:10px}
+thead th{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;padding:6px 8px;text-align:right;border-bottom:1px solid var(--border);white-space:nowrap}
 thead th:first-child{text-align:left}
-tbody td{padding:6px 10px;border-bottom:1px solid rgba(28,38,53,.6);font-family:'DM Mono',monospace;font-size:11px;text-align:right;color:var(--text)}
-tbody td:first-child{text-align:left;font-family:'DM Sans',sans-serif;font-size:11px;max-width:200px}
+tbody td{padding:6px 8px;border-bottom:1px solid var(--border);font-family:'DM Mono',monospace;font-size:10px;text-align:right;color:var(--text)}
+tbody td:first-child{text-align:left;font-family:'DM Sans',sans-serif;font-size:11px}
 tbody tr:hover td{background:var(--s2)}
-.tv-pos{color:var(--green)} .tv-neg{color:var(--red)} .tv-neu{color:var(--yellow)}
-
-/* ── NEWS PANEL ── */
-.news-panel{background:var(--s1);border-left:1px solid var(--border);position:sticky;top:80px;height:calc(100vh - 80px);display:flex;flex-direction:column;overflow:hidden}
-.news-hdr{padding:12px 12px 8px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-.news-title{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase}
-.news-count{font-family:'DM Mono',monospace;font-size:10px;color:var(--accent)}
-.news-filters{padding:7px 12px;border-bottom:1px solid var(--border);display:flex;gap:4px;flex-wrap:wrap;flex-shrink:0}
-.nf-chip{padding:2px 7px;border:1px solid var(--border);background:none;color:var(--muted);font-family:'DM Mono',monospace;font-size:9px;border-radius:20px;cursor:pointer;transition:all .12s;text-transform:uppercase}
-.nf-chip:hover{border-color:var(--cyan);color:var(--cyan)}
-.nf-chip.active{background:var(--cyan);color:var(--bg);border-color:var(--cyan)}
-.news-list{overflow-y:auto;flex:1;padding:6px 0}
-.news-card{padding:9px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s}
-.news-card:hover{background:var(--s2)}
-.news-card.alerta{border-left:3px solid var(--red);background:rgba(239,68,68,.04)}
-.news-card.pos-card{border-left:3px solid var(--green)}
-.nc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:5px;margin-bottom:4px}
-.nc-titulo{font-size:11px;font-weight:500;color:var(--text);line-height:1.3;flex:1}
-.nc-sent{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:3px}
-.nc-sent.positivo{background:var(--green)} .nc-sent.negativo{background:var(--red)} .nc-sent.neutro{background:var(--muted)}
-.nc-resumen{font-size:10px;color:var(--muted);margin-bottom:5px;line-height:1.4}
-.nc-footer{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
-.nc-sector{font-family:'DM Mono',monospace;font-size:8px;background:var(--dim);padding:1px 4px;border-radius:2px;color:var(--muted);text-transform:uppercase}
-.nc-prov{font-family:'DM Mono',monospace;font-size:8px;background:rgba(59,130,246,.12);padding:1px 4px;border-radius:2px;color:var(--accent)}
-.nc-alerta{font-family:'DM Mono',monospace;font-size:8px;background:rgba(239,68,68,.15);padding:1px 4px;border-radius:2px;color:var(--red)}
-.nc-fuente{font-size:9px;color:var(--muted);margin-left:auto}
-.news-empty{padding:24px 12px;text-align:center;color:var(--muted);font-size:11px}
-
-::-webkit-scrollbar{width:4px;height:4px}
-::-webkit-scrollbar-track{background:var(--bg)}
-::-webkit-scrollbar-thumb{background:var(--dim);border-radius:2px}
-@media(max-width:1200px){.layout{grid-template-columns:200px 1fr}.news-panel{display:none}}
-@media(max-width:800px){.layout{grid-template-columns:1fr}.sidebar{display:none}.kpi-row,.macro-grid,.senales-grid{grid-template-columns:1fr 1fr}.precios-grid{grid-template-columns:repeat(3,1fr)}}
+.rc{background:var(--s1);border:1px solid var(--border);border-left:3px solid;border-radius:6px;padding:11px 13px;box-shadow:0 1px 3px var(--sh)}
+.rc.bajo{border-left-color:var(--green)}.rc.medio{border-left-color:var(--yellow)}.rc.alto{border-left-color:var(--red)}.rc.critico{border-left-color:var(--purple)}
+.rc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:7px;gap:5px}
+.rc-name{font-size:11px;font-weight:500;flex:1;line-height:1.3}
+.rc-niv{font-family:'DM Mono',monospace;font-size:8px;padding:2px 5px;border-radius:2px;text-transform:uppercase;flex-shrink:0}
+.rc-niv.bajo{background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.25)}
+.rc-niv.medio{background:rgba(234,179,8,.12);color:var(--yellow);border:1px solid rgba(234,179,8,.25)}
+.rc-niv.alto{background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.25)}
+.rc-niv.critico{background:rgba(168,85,247,.12);color:var(--purple);border:1px solid rgba(168,85,247,.25)}
+.rc-m{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:7px}
+.rc-mv{font-family:'DM Mono',monospace;font-size:12px;font-weight:500}
+.rc-ml{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
+.rc-d{font-size:10px;color:var(--muted);line-height:1.5;border-top:1px solid var(--border);padding-top:6px}
+.rc-d strong{color:var(--text);font-weight:500}
+.news-panel{background:var(--s1);border-top:1px solid var(--border);max-height:380px;display:flex;flex-direction:column;overflow:hidden}
+@media(min-width:900px){.news-panel{border-top:none;border-left:1px solid var(--border);position:sticky;top:74px;height:calc(100vh - 74px);max-height:none}}
+.news-hdr{padding:9px 11px 7px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.news-title{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase}
+.news-count{font-family:'DM Mono',monospace;font-size:9px;color:var(--accent)}
+.nf{padding:5px 11px;border-bottom:1px solid var(--border);display:flex;gap:4px;overflow-x:auto;flex-shrink:0}
+.nfc{padding:2px 6px;border:1px solid var(--border);background:none;color:var(--muted);font-family:'DM Mono',monospace;font-size:8px;border-radius:20px;cursor:pointer;text-transform:uppercase;white-space:nowrap}
+.nfc.active{background:var(--cyan);color:var(--bg);border-color:var(--cyan)}
+.news-list{overflow-y:auto;flex:1;padding:3px 0}
+.nc{padding:8px 11px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s}
+.nc:hover{background:var(--s2)}.nc.alerta{border-left:3px solid var(--red);background:rgba(239,68,68,.04)}.nc.pcard{border-left:3px solid var(--green)}
+.nc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:4px;margin-bottom:3px}
+.nc-tit{font-size:10px;font-weight:500;color:var(--text);line-height:1.3;flex:1}
+.nc-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.nc-dot.positivo{background:var(--green)}.nc-dot.negativo{background:var(--red)}.nc-dot.neutro{background:var(--muted)}
+.nc-res{font-size:9px;color:var(--muted);margin-bottom:4px;line-height:1.4}
+.nc-ft{display:flex;align-items:center;gap:3px;flex-wrap:wrap}
+.nc-sec{font-family:'DM Mono',monospace;font-size:7px;background:var(--dim);padding:1px 3px;border-radius:2px;color:var(--muted);text-transform:uppercase}
+.nc-pv{font-family:'DM Mono',monospace;font-size:7px;background:rgba(59,130,246,.12);padding:1px 3px;border-radius:2px;color:var(--accent)}
+.news-empty{padding:16px;text-align:center;color:var(--muted);font-size:10px;line-height:1.7}
+::-webkit-scrollbar{width:3px;height:3px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
 </style>
 </head>
 <body>
-
-<!-- TICKER -->
-<div class="ticker">
-  <div class="ticker-label">GP · ECO RADAR</div>
-  <div class="ticker-track">
-    <div class="ticker-inner" id="tickerInner">
-      <!-- se llena por JS -->
-    </div>
-  </div>
-</div>
-
-<!-- TOPBAR -->
+<div class="ticker"><div class="ticker-label">GP·RADAR</div><div class="ticker-track"><div class="ticker-inner" id="tkr"><div class="tick-item"><span class="tick-lbl">CARGANDO</span>&nbsp;<span class="info">datos en vivo...</span></div><div class="tick-item"><span class="tick-lbl">CARGANDO</span>&nbsp;<span class="info">datos en vivo...</span></div></div></div></div>
 <header class="topbar">
   <div class="brand">ECO RADAR</div>
-  <div class="topbar-divider"></div>
   <nav class="tab-nav">
     <button class="tab-btn active" onclick="setTab('actividad')">Actividad</button>
     <button class="tab-btn" onclick="setTab('macro')">Macro</button>
-    <button class="tab-btn" onclick="setTab('riesgo')">Riesgo Crediticio</button>
-    <button class="tab-btn" onclick="setTab('externo')">Sector Externo</button>
+    <button class="tab-btn" onclick="setTab('mora')">Mora &amp; Tasas</button>
+    <button class="tab-btn" onclick="setTab('riesgo')">Riesgo</button>
+    <button class="tab-btn" onclick="setTab('externo')">Externo</button>
   </nav>
   <div class="topbar-right">
-    <span class="last-update" id="lastUpdate">—</span>
-    <button class="refresh-btn" onclick="refreshAll()">↺ ACT.</button>
+    <button class="icon-btn" onclick="refreshAll()" title="Actualizar">↺</button>
+    <button class="icon-btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
   </div>
 </header>
-
-<!-- ALERT BANNER -->
-<div class="alert-banner" id="alertBanner">
-  <span class="alert-pill">⚠ ALERTA</span>
-  <div class="alert-scroll"><span id="alertText"></span></div>
+<div class="install-banner" id="installBanner">
+  <div class="install-txt">📲 Instalá <span>ECO RADAR</span> como app</div>
+  <button class="install-btn" id="installBtn">INSTALAR</button>
+  <button class="install-close" onclick="closeInstall()">✕</button>
 </div>
-
+<div class="alert-banner" id="alertBanner"><span class="alert-pill">⚠</span><div class="alert-scroll"><span id="alertText"></span></div></div>
 <div class="layout">
-
-<!-- SIDEBAR -->
 <aside class="sidebar">
   <div class="sb-sec">
     <div class="sb-lbl">Provincia</div>
-    <button class="prov-card active" onclick="setProv('SF')" id="pbSF">
-      <div class="pc-left"><span class="pc-badge">SF</span><span class="pc-name">Santa Fe</span></div>
-      <span class="pc-var pos">+4.2%</span>
-    </button>
-    <button class="prov-card" onclick="setProv('ER')" id="pbER">
-      <div class="pc-left"><span class="pc-badge">ER</span><span class="pc-name">Entre Ríos</span></div>
-      <span class="pc-var neu">+2.1%</span>
-    </button>
-    <button class="prov-card" onclick="setProv('SJ')" id="pbSJ">
-      <div class="pc-left"><span class="pc-badge">SJ</span><span class="pc-name">San Juan</span></div>
-      <span class="pc-var neu">+1.4%</span>
-    </button>
-    <button class="prov-card" onclick="setProv('SC')" id="pbSC">
-      <div class="pc-left"><span class="pc-badge">SC</span><span class="pc-name">Santa Cruz</span></div>
-      <span class="pc-var pos">+3.8%</span>
-    </button>
+    <button class="prov-card active" onclick="setProv('SF')" id="pbSF"><div class="pc-left"><span class="pc-badge">SF</span><span class="pc-name">Santa Fe</span></div><span class="pc-var pos">+4.2%</span></button>
+    <button class="prov-card" onclick="setProv('ER')" id="pbER"><div class="pc-left"><span class="pc-badge">ER</span><span class="pc-name">Entre Ríos</span></div><span class="pc-var neu">+2.1%</span></button>
+    <button class="prov-card" onclick="setProv('SJ')" id="pbSJ"><div class="pc-left"><span class="pc-badge">SJ</span><span class="pc-name">San Juan</span></div><span class="pc-var neu">+1.4%</span></button>
+    <button class="prov-card" onclick="setProv('SC')" id="pbSC"><div class="pc-left"><span class="pc-badge">SC</span><span class="pc-name">Santa Cruz</span></div><span class="pc-var pos">+3.8%</span></button>
   </div>
-  <div class="sb-sec">
-    <div class="sb-lbl">Filtros</div>
-    <div class="filter-row">
-      <div class="filter-lbl">Oportunidad</div>
-      <select class="filter-sel" id="filterOpp" onchange="applyFilters()">
-        <option value="todas">Todas</option>
-        <option value="crecer">▲ Crecer</option>
-        <option value="salir">▼ Salir</option>
-        <option value="defender">◆ Defender</option>
-        <option value="observar">○ Observar</option>
-      </select>
-    </div>
-    <div class="filter-row">
-      <div class="filter-lbl">Tamaño SEPyME</div>
-      <select class="filter-sel" id="filterSize" onchange="applyFilters()">
-        <option value="todas">Todas</option>
-        <option value="micro">Micro</option>
-        <option value="pequena">Pequeña</option>
-        <option value="mediana">Mediana</option>
-      </select>
-    </div>
-  </div>
-  <div class="sb-sec" style="border:none">
-    <div class="sb-lbl">Referencias</div>
-    <div class="leg-row"><div class="leg-dot" style="background:var(--green)"></div>Crecimiento</div>
-    <div class="leg-row"><div class="leg-dot" style="background:var(--red)"></div>Contracción</div>
-    <div class="leg-row"><div class="leg-dot" style="background:var(--yellow)"></div>Moderado</div>
-    <div class="leg-row"><div class="leg-dot" style="background:var(--muted)"></div>Sin tendencia</div>
-    <br>
-    <div style="font-size:9px;color:var(--muted);line-height:1.8">
-      BCRA · DolarAPI · INDEC<br>IERAL · Agrofy · Reuters<br>
-      <span style="color:var(--border2)">Auto-refresh: 15 min</span>
-    </div>
+  <div class="sb-filters">
+    <div class="sb-lbl" style="margin-top:4px">Filtros</div>
+    <div class="f-row"><div class="f-lbl">Oportunidad</div><select class="f-sel" id="filterOpp" onchange="applyFilters()"><option value="todas">Todas</option><option value="crecer">▲ Crecer</option><option value="salir">▼ Salir</option><option value="defender">◆ Defender</option><option value="observar">○ Observar</option></select></div>
+    <div class="f-row"><div class="f-lbl">Tamaño SEPyME</div><select class="f-sel" id="filterSize" onchange="applyFilters()"><option value="todas">Todas</option><option value="micro">Micro</option><option value="pequena">Pequeña</option><option value="mediana">Mediana</option></select></div>
+    <br><div style="font-size:9px;color:var(--muted);line-height:1.8;padding:0 2px">BCRA · DolarAPI · Yahoo Finance<br>INDEC · IERAL · Agrofy<br><span style="color:var(--border2)" id="lastUpdate">—</span></div>
   </div>
 </aside>
-
-<!-- MAIN -->
 <main class="main">
 
-  <!-- TAB: ACTIVIDAD -->
-  <div class="tab-content active" id="tab-actividad">
-    <div id="actividadContent"><div style="color:var(--muted);padding:20px;font-family:'DM Mono',monospace;font-size:11px">CARGANDO...</div></div>
+<!-- ACTIVIDAD -->
+<div class="tab-content active" id="tab-actividad"><div id="actContent"><div style="color:var(--muted);padding:20px;font-family:'DM Mono',monospace;font-size:10px;text-align:center">CARGANDO...</div></div></div>
+
+<!-- MACRO -->
+<div class="tab-content" id="tab-macro">
+  <div class="sh"><div class="st"><em>01</em> TIPO DE CAMBIO</div><span style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted)" id="macroTs">—</span></div>
+  <div class="g4">
+    <div class="card card-stripe stripe-cyan"><div class="card-top"><span class="card-ico">💵</span><span class="tag tag-cyan">MEP</span></div><div class="card-val info" id="mMep">—</div><div class="card-lbl">Dólar MEP (venta)</div><div class="card-sub" id="mMepC">compra: —</div></div>
+    <div class="card card-stripe stripe-cyan"><div class="card-top"><span class="card-ico">🌐</span><span class="tag tag-cyan">CCL</span></div><div class="card-val info" id="mCcl">—</div><div class="card-lbl">Contado con Liqui</div><div class="card-sub" id="mBrecha">brecha: —</div></div>
+    <div class="card card-stripe stripe-cyan"><div class="card-top"><span class="card-ico">🔵</span><span class="tag tag-cyan">BLUE</span></div><div class="card-val neu" id="mBlue">—</div><div class="card-lbl">Dólar Blue</div><div class="card-sub" id="mBlueC">compra: —</div></div>
+    <div class="card card-stripe stripe-cyan"><div class="card-top"><span class="card-ico">🏛</span><span class="tag tag-cyan">OFICIAL</span></div><div class="card-val info" id="mOfic">—</div><div class="card-lbl">Dólar Oficial</div><div class="card-sub" id="mOficC">compra: —</div></div>
   </div>
-
-  <!-- TAB: MACRO -->
-  <div class="tab-content" id="tab-macro">
-
-    <div class="sec-hdr"><div class="sec-title"><em>01</em> TIPO DE CAMBIO</div></div>
-    <div class="macro-grid">
-      <div class="mc tipo-cambio">
-        <div class="mc-top"><span class="mc-ico">💵</span><span class="mc-tag cyan">MEP / BOLSA</span></div>
-        <div class="mc-val info" id="mMep">—</div>
-        <div class="mc-lbl">Dólar MEP (venta)</div>
-        <div class="mc-sub" id="mMepComp">compra: —</div>
-      </div>
-      <div class="mc tipo-cambio">
-        <div class="mc-top"><span class="mc-ico">🌐</span><span class="mc-tag cyan">CCL</span></div>
-        <div class="mc-val info" id="mCcl">—</div>
-        <div class="mc-lbl">Contado con Liqui</div>
-        <div class="mc-sub" id="mBrecha">brecha vs oficial: —</div>
-      </div>
-      <div class="mc tipo-cambio">
-        <div class="mc-top"><span class="mc-ico">🔵</span><span class="mc-tag cyan">BLUE</span></div>
-        <div class="mc-val neu" id="mBlue">—</div>
-        <div class="mc-lbl">Dólar Blue (venta)</div>
-        <div class="mc-sub" id="mBlueComp">compra: —</div>
-      </div>
-      <div class="mc tipo-cambio">
-        <div class="mc-top"><span class="mc-ico">🏛</span><span class="mc-tag cyan">OFICIAL</span></div>
-        <div class="mc-val info" id="mOficial">—</div>
-        <div class="mc-lbl">Dólar Oficial (venta)</div>
-        <div class="mc-sub" id="mOficialComp">compra: —</div>
-      </div>
-    </div>
-
-    <div class="sec-hdr"><div class="sec-title"><em>02</em> TASAS E INFLACIÓN</div></div>
-    <div class="macro-row2">
-      <div class="mc inflacion">
-        <div class="mc-top"><span class="mc-ico">📈</span><span class="mc-tag red">INFLACIÓN</span></div>
-        <div class="mc-val neg" id="mInflMens">—</div>
-        <div class="mc-lbl">Inflación mensual (IPC)</div>
-        <div class="mc-sub" id="mInflAnual">acumulada 12m: —</div>
-      </div>
-      <div class="mc tasa">
-        <div class="mc-top"><span class="mc-ico">🏦</span><span class="mc-tag yellow">TASA BCRA</span></div>
-        <div class="mc-val neu" id="mTasaBcra">—</div>
-        <div class="mc-lbl">Tasa política monetaria (TNA)</div>
-        <div class="mc-sub" id="mTasaBadlar">BADLAR: —</div>
-      </div>
-      <div class="mc tasa">
-        <div class="mc-top"><span class="mc-ico">💼</span><span class="mc-tag yellow">TASA PyME</span></div>
-        <div class="mc-val neu" id="mTasaPyme">~65%</div>
-        <div class="mc-lbl">Tasa activa PyME (ref.)</div>
-        <div class="mc-sub">spread vs BADLAR: ~15pp</div>
-      </div>
-    </div>
-
-    <div class="sec-hdr"><div class="sec-title"><em>03</em> RESERVAS Y AGREGADOS</div></div>
-    <div class="macro-grid">
-      <div class="mc actividad">
-        <div class="mc-top"><span class="mc-ico">🏦</span><span class="mc-tag blue">RESERVAS</span></div>
-        <div class="mc-val info" id="mReservas">—</div>
-        <div class="mc-lbl">Reservas BCRA (brutas)</div>
-      </div>
-      <div class="mc actividad">
-        <div class="mc-top"><span class="mc-ico">💰</span><span class="mc-tag blue">BASE MON.</span></div>
-        <div class="mc-val info" id="mBase">—</div>
-        <div class="mc-lbl">Base monetaria</div>
-      </div>
-      <div class="mc riesgo">
-        <div class="mc-top"><span class="mc-ico">📊</span><span class="mc-tag purple">RIESGO PAÍS</span></div>
-        <div class="mc-val" style="color:var(--purple)" id="mRiesgo">~780 bps</div>
-        <div class="mc-lbl">EMBI Argentina (ref.)</div>
-      </div>
-      <div class="mc actividad">
-        <div class="mc-top"><span class="mc-ico">📉</span><span class="mc-tag blue">BRECHA</span></div>
-        <div class="mc-val neu" id="mBrechaGrd">—</div>
-        <div class="mc-lbl">Brecha Blue vs Oficial</div>
-      </div>
-    </div>
-
-    <div class="sec-hdr"><div class="sec-title"><em>04</em> SEÑALES ADELANTADAS DE ACTIVIDAD</div></div>
-    <div class="senales-grid">
-      <div class="senal">
-        <div class="senal-top"><span class="senal-ico">🏗</span><span class="senal-nombre">Despacho Cemento</span></div>
-        <div class="senal-val pos">+3.2%</div>
-        <div class="senal-trend pos">↑ var. mensual</div>
-        <div class="senal-desc">Proxy construcción</div>
-      </div>
-      <div class="senal">
-        <div class="senal-top"><span class="senal-ico">🚗</span><span class="senal-nombre">Patentamiento</span></div>
-        <div class="senal-val neg">-8.4%</div>
-        <div class="senal-trend neg">↓ var. anual</div>
-        <div class="senal-desc">Proxy consumo durable</div>
-      </div>
-      <div class="senal">
-        <div class="senal-top"><span class="senal-ico">⚡</span><span class="senal-nombre">Consumo Energético</span></div>
-        <div class="senal-val pos">+1.8%</div>
-        <div class="senal-trend pos">↑ industria</div>
-        <div class="senal-desc">Proxy producción industrial</div>
-      </div>
-      <div class="senal">
-        <div class="senal-top"><span class="senal-ico">📦</span><span class="senal-nombre">EMI Industrial</span></div>
-        <div class="senal-val neu">+0.4%</div>
-        <div class="senal-trend neu">→ var. mensual</div>
-        <div class="senal-desc">INDEC – Estimador Mensual</div>
-      </div>
-    </div>
-
-  </div><!-- /tab-macro -->
-
-  <!-- TAB: RIESGO CREDITICIO -->
-  <div class="tab-content" id="tab-riesgo">
-    <div id="riesgoContent"></div>
+  <div class="sh"><div class="st"><em>02</em> BCRA — PRINCIPALES VARIABLES</div></div>
+  <div class="g4">
+    <div class="card card-stripe stripe-red"><div class="card-top"><span class="card-ico">📈</span><span class="tag tag-red">INFLACIÓN</span></div><div class="card-val neg" id="mInfl">—</div><div class="card-lbl">IPC mensual</div><div class="card-sub" id="mInflA">acum. 12m: —</div></div>
+    <div class="card card-stripe stripe-yellow"><div class="card-top"><span class="card-ico">🏦</span><span class="tag tag-yellow">TASA BCRA</span></div><div class="card-val neu" id="mTasaBcra">—</div><div class="card-lbl">Política monetaria (TNA)</div></div>
+    <div class="card card-stripe stripe-blue"><div class="card-top"><span class="card-ico">🏦</span><span class="tag tag-blue">RESERVAS</span></div><div class="card-val info" id="mRes">—</div><div class="card-lbl">Reservas brutas BCRA</div></div>
+    <div class="card card-stripe stripe-blue"><div class="card-top"><span class="card-ico">📉</span><span class="tag tag-blue">BRECHA</span></div><div class="card-val neu" id="mBrechaG">—</div><div class="card-lbl">Blue vs Oficial</div></div>
   </div>
+  <div class="sh"><div class="st"><em>03</em> SEÑALES ADELANTADAS</div></div>
+  <div class="g4">
+    <div class="card"><div class="card-top"><span class="card-ico">🏗</span><span class="tag tag-green">CEMENTO</span></div><div class="card-val pos">+3.2%</div><div class="card-lbl">Var. mensual</div><div class="card-sub">Proxy construcción</div></div>
+    <div class="card"><div class="card-top"><span class="card-ico">🚗</span><span class="tag tag-red">PATENT.</span></div><div class="card-val neg">-8.4%</div><div class="card-lbl">Var. anual</div><div class="card-sub">Proxy consumo</div></div>
+    <div class="card"><div class="card-top"><span class="card-ico">⚡</span><span class="tag tag-green">ENERGÍA</span></div><div class="card-val pos">+1.8%</div><div class="card-lbl">Industria</div><div class="card-sub">Proxy producción</div></div>
+    <div class="card"><div class="card-top"><span class="card-ico">📦</span><span class="tag tag-yellow">EMI</span></div><div class="card-val neu">+0.4%</div><div class="card-lbl">INDEC Mensual</div><div class="card-sub">Est. industria</div></div>
+  </div>
+</div>
 
-  <!-- TAB: SECTOR EXTERNO -->
-  <div class="tab-content" id="tab-externo">
+<!-- MORA & TASAS -->
+<div class="tab-content" id="tab-mora">
+  <div class="sh"><div class="st"><em>01</em> MORA POR SEGMENTO — SISTEMA FINANCIERO</div><span style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted)">BCRA · IFNB</span></div>
+  <div class="g2">
+    <div class="mora-card familias"><div class="mora-top"><div class="mora-nombre">👨‍👩‍👧 Familias</div><span class="tag tag-blue">PERSONAS</span></div><div class="mora-val" style="color:var(--accent)">3.8%</div><div class="mora-desc">Irregularidad cartera consumo</div><div class="mora-bar-bg"><div class="mora-bar" style="width:38%;background:var(--accent)"></div></div><div class="mora-meta"><div><div class="mora-kpi-val pos">4.2%</div><div class="mora-kpi-lbl">Tarjetas</div></div><div><div class="mora-kpi-val neu">3.1%</div><div class="mora-kpi-lbl">Personal</div></div><div><div class="mora-kpi-val pos">1.4%</div><div class="mora-kpi-lbl">Hipotec.</div></div></div></div>
+    <div class="mora-card empresas"><div class="mora-top"><div class="mora-nombre">🏢 Empresas</div><span class="tag tag-purple">CORPORATIVO</span></div><div class="mora-val" style="color:var(--purple)">2.9%</div><div class="mora-desc">Irregularidad cartera comercial</div><div class="mora-bar-bg"><div class="mora-bar" style="width:29%;background:var(--purple)"></div></div><div class="mora-meta"><div><div class="mora-kpi-val pos">1.8%</div><div class="mora-kpi-lbl">Grandes</div></div><div><div class="mora-kpi-val neu">3.4%</div><div class="mora-kpi-lbl">Medianas</div></div><div><div class="mora-kpi-val neg">5.1%</div><div class="mora-kpi-lbl">Pequeñas</div></div></div></div>
+    <div class="mora-card pymes"><div class="mora-top"><div class="mora-nombre">🏭 PyMEs</div><span class="tag tag-yellow">SEPyME</span></div><div class="mora-val" style="color:var(--yellow)">4.6%</div><div class="mora-desc">Irregularidad cartera PyME certificada</div><div class="mora-bar-bg"><div class="mora-bar" style="width:46%;background:var(--yellow)"></div></div><div class="mora-meta"><div><div class="mora-kpi-val neg">6.2%</div><div class="mora-kpi-lbl">Micro</div></div><div><div class="mora-kpi-val neu">4.8%</div><div class="mora-kpi-lbl">Pequeña</div></div><div><div class="mora-kpi-val pos">3.1%</div><div class="mora-kpi-lbl">Mediana</div></div></div></div>
+    <div class="mora-card total"><div class="mora-top"><div class="mora-nombre">🏦 Sistema</div><span class="tag tag-blue">TOTAL</span></div><div class="mora-val" style="color:var(--muted)">3.4%</div><div class="mora-desc">Mora total sistema financiero</div><div class="mora-bar-bg"><div class="mora-bar" style="width:34%;background:var(--muted)"></div></div><div class="mora-meta"><div><div class="mora-kpi-val">3.1%</div><div class="mora-kpi-lbl">Bancos</div></div><div><div class="mora-kpi-val">5.8%</div><div class="mora-kpi-lbl">Financ.</div></div><div><div class="mora-kpi-val">2.3%</div><div class="mora-kpi-lbl">Billeteras</div></div></div></div>
+  </div>
+  <div class="sh"><div class="st"><em>02</em> TASAS DE INTERÉS — BCRA EN VIVO</div></div>
+  <div class="tbl-wrap"><div style="padding:12px 14px">
+    <div class="tasa-row"><div><div class="tasa-nombre">Política Monetaria (Pases)</div><div class="tasa-desc">Tasa de referencia BCRA</div></div><div class="tasa-vals"><div class="tasa-tna neu" id="tPolitica">—</div><div class="tasa-tea" id="tPoliticaTEA">TEA: —</div></div></div>
+    <div class="tasa-row"><div><div class="tasa-nombre">BADLAR Bancos Privados</div><div class="tasa-desc">Depósitos +$1M 30-35 días</div></div><div class="tasa-vals"><div class="tasa-tna neu" id="tBadlar">—</div><div class="tasa-tea" id="tBadlarTEA">TEA: —</div></div></div>
+    <div class="tasa-row"><div><div class="tasa-nombre">TM20 Bancos Privados</div><div class="tasa-desc">Depósitos +$20M</div></div><div class="tasa-vals"><div class="tasa-tna neu" id="tTm20">—</div><div class="tasa-tea" id="tTm20TEA">TEA: —</div></div></div>
+    <div class="tasa-row"><div><div class="tasa-nombre">Préstamos PyME (ref.)</div><div class="tasa-desc">Tasa activa cartera PyME</div></div><div class="tasa-vals"><div class="tasa-tna" style="color:var(--orange)" id="tPyme">~65%</div><div class="tasa-tea">spread: ~+15pp BADLAR</div></div></div>
+    <div class="tasa-row"><div><div class="tasa-nombre">Tarjeta de Crédito (ref.)</div><div class="tasa-desc">Tasa financiación consumo</div></div><div class="tasa-vals"><div class="tasa-tna" style="color:var(--red)">~110%</div><div class="tasa-tea">TEA: &gt;180%</div></div></div>
+    <div class="tasa-row"><div><div class="tasa-nombre">Plazo Fijo 30d (ref.)</div><div class="tasa-desc">Tasa pasiva promedio</div></div><div class="tasa-vals"><div class="tasa-tna pos" id="tPF">—</div><div class="tasa-tea" id="tPFTEA">TEA: —</div></div></div>
+  </div></div>
+  <div class="sh"><div class="st"><em>03</em> SPREAD Y RENTABILIDAD</div></div>
+  <div class="g3">
+    <div class="card card-stripe stripe-green"><div class="card-top"><span class="card-ico">📊</span><span class="tag tag-green">SPREAD</span></div><div class="card-val pos" id="spreadPyme">~+15pp</div><div class="card-lbl">Spread PyME vs BADLAR</div><div class="card-sub">Margen intermediación</div></div>
+    <div class="card card-stripe stripe-orange"><div class="card-top"><span class="card-ico">⚠</span><span class="tag tag-orange">COSTO MORA</span></div><div class="card-val" style="color:var(--orange)">~1.8%</div><div class="card-lbl">Impacto mora en ROA</div><div class="card-sub">Estimado sistema</div></div>
+    <div class="card card-stripe stripe-purple"><div class="card-top"><span class="card-ico">💰</span><span class="tag tag-purple">NIM</span></div><div class="card-val" style="color:var(--purple)">~8.2%</div><div class="card-lbl">Net Interest Margin</div><div class="card-sub">Bancos privados</div></div>
+  </div>
+</div>
 
-    <div class="sec-hdr"><div class="sec-title"><em>01</em> PRECIOS INTERNACIONALES · COMMODITIES CLAVE</div></div>
-    <div class="precios-grid">
-      <div class="precio-card">
-        <div class="precio-ico">🌾</div>
-        <div class="precio-nombre">Soja</div>
-        <div class="precio-val info" id="pSoja">$368</div>
-        <div class="precio-var pos" id="pvSoja">+1.2% semanal</div>
-      </div>
-      <div class="precio-card">
-        <div class="precio-ico">🌽</div>
-        <div class="precio-nombre">Maíz</div>
-        <div class="precio-val info" id="pMaiz">$162</div>
-        <div class="precio-var neg" id="pvMaiz">-0.8% semanal</div>
-      </div>
-      <div class="precio-card">
-        <div class="precio-ico">🌾</div>
-        <div class="precio-nombre">Trigo</div>
-        <div class="precio-val info" id="pTrigo">$198</div>
-        <div class="precio-var pos" id="pvTrigo">+0.5% semanal</div>
-      </div>
-      <div class="precio-card">
-        <div class="precio-ico">🛢</div>
-        <div class="precio-nombre">Petróleo WTI</div>
-        <div class="precio-val info" id="pPetroleo">$78.4</div>
-        <div class="precio-var neu" id="pvPetroleo">-0.2% semanal</div>
-      </div>
-      <div class="precio-card">
-        <div class="precio-ico">🥇</div>
-        <div class="precio-nombre">Oro</div>
-        <div class="precio-val info" id="pOro">$3,180</div>
-        <div class="precio-var pos" id="pvOro">+2.1% semanal</div>
-      </div>
-      <div class="precio-card">
-        <div class="precio-ico">🔵</div>
-        <div class="precio-nombre">Litio</div>
-        <div class="precio-val info" id="pLitio">$12,400</div>
-        <div class="precio-var neg" id="pvLitio">-3.4% mensual</div>
-      </div>
-    </div>
+<!-- RIESGO -->
+<div class="tab-content" id="tab-riesgo"><div id="riesgoContent"></div></div>
 
-    <div class="sec-hdr"><div class="sec-title"><em>02</em> EXPORTACIONES POR COMPLEJO PRODUCTIVO</div></div>
-    <div class="tbl-wrap">
-      <table>
-        <thead><tr>
-          <th>Complejo</th><th>Provincia</th><th>U$S Mill. (acum.)</th><th>Var. Anual</th><th>Part. Total</th><th>Estado</th>
-        </tr></thead>
-        <tbody>
-          <tr><td>Sojero (harina+aceite+grano)</td><td style="color:var(--muted)">SF / ER</td><td>$14,820</td><td class="tv-pos">+6.2%</td><td>24.1%</td><td><span class="opp-tag crecer">▲ CRECER</span></td></tr>
-          <tr><td>Cerealero (maíz + trigo)</td><td style="color:var(--muted)">SF / ER</td><td>$7,340</td><td class="tv-pos">+4.8%</td><td>11.9%</td><td><span class="opp-tag crecer">▲ CRECER</span></td></tr>
-          <tr><td>Petróleo y Gas</td><td style="color:var(--muted)">SC</td><td>$5,910</td><td class="tv-pos">+8.7%</td><td>9.6%</td><td><span class="opp-tag crecer">▲ CRECER</span></td></tr>
-          <tr><td>Minería (oro + plata + cobre)</td><td style="color:var(--muted)">SJ</td><td>$3,840</td><td class="tv-pos">+12.3%</td><td>6.2%</td><td><span class="opp-tag crecer">▲ CRECER</span></td></tr>
-          <tr><td>Avícola (carne + subprod.)</td><td style="color:var(--muted)">ER</td><td>$1,240</td><td class="tv-pos">+7.8%</td><td>2.0%</td><td><span class="opp-tag crecer">▲ CRECER</span></td></tr>
-          <tr><td>Vitivinícola</td><td style="color:var(--muted)">SJ</td><td>$980</td><td class="tv-pos">+5.2%</td><td>1.6%</td><td><span class="opp-tag defender">◆ DEFENDER</span></td></tr>
-          <tr><td>Pesca y procesado</td><td style="color:var(--muted)">SC</td><td>$870</td><td class="tv-pos">+4.1%</td><td>1.4%</td><td><span class="opp-tag defender">◆ DEFENDER</span></td></tr>
-          <tr><td>Maquinaria agrícola</td><td style="color:var(--muted)">SF</td><td>$420</td><td class="tv-pos">+8.4%</td><td>0.7%</td><td><span class="opp-tag crecer">▲ CRECER</span></td></tr>
-          <tr><td>Software y Servicios IT</td><td style="color:var(--muted)">SF</td><td>$310</td><td class="tv-pos">+11.2%</td><td>0.5%</td><td><span class="opp-tag crecer">▲ CRECER</span></td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="sec-hdr"><div class="sec-title"><em>03</em> TIPO DE CAMBIO EFECTIVO EXPORTADOR</div></div>
-    <div class="macro-grid">
-      <div class="mc externo">
-        <div class="mc-top"><span class="mc-ico">🌾</span><span class="mc-tag green">AGRO</span></div>
-        <div class="mc-val pos">~$850</div>
-        <div class="mc-lbl">TCE agropecuario (con retenc.)</div>
-        <div class="mc-sub">retención soja: 33%</div>
-      </div>
-      <div class="mc externo">
-        <div class="mc-top"><span class="mc-ico">🛢</span><span class="mc-tag green">HIDRO</span></div>
-        <div class="mc-val pos">~$1,020</div>
-        <div class="mc-lbl">TCE hidrocarburos</div>
-        <div class="mc-sub">retención: 8%</div>
-      </div>
-      <div class="mc externo">
-        <div class="mc-top"><span class="mc-ico">🥇</span><span class="mc-tag green">MINERÍA</span></div>
-        <div class="mc-val pos">~$1,010</div>
-        <div class="mc-lbl">TCE minería</div>
-        <div class="mc-sub">retención: 5-12%</div>
-      </div>
-      <div class="mc externo">
-        <div class="mc-top"><span class="mc-ico">💻</span><span class="mc-tag green">SOFTWARE</span></div>
-        <div class="mc-val pos">~$1,050</div>
-        <div class="mc-lbl">TCE servicios basados en conocimiento</div>
-        <div class="mc-sub">sin retenciones</div>
-      </div>
-    </div>
-
-  </div><!-- /tab-externo -->
+<!-- EXTERNO -->
+<div class="tab-content" id="tab-externo">
+  <div class="sh"><div class="st"><em>01</em> COMMODITIES EN VIVO</div><span style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted)" id="commTs">cargando...</span></div>
+  <div class="g6">
+    <div class="comm-card" id="cSoja"><div class="comm-ico">🌾</div><div class="comm-name">Soja</div><div class="comm-val comm-loading">—</div><div class="comm-var neu">—</div></div>
+    <div class="comm-card" id="cMaiz"><div class="comm-ico">🌽</div><div class="comm-name">Maíz</div><div class="comm-val comm-loading">—</div><div class="comm-var neu">—</div></div>
+    <div class="comm-card" id="cTrigo"><div class="comm-ico">🌾</div><div class="comm-name">Trigo</div><div class="comm-val comm-loading">—</div><div class="comm-var neu">—</div></div>
+    <div class="comm-card" id="cPetroleo"><div class="comm-ico">🛢</div><div class="comm-name">WTI</div><div class="comm-val comm-loading">—</div><div class="comm-var neu">—</div></div>
+    <div class="comm-card" id="cOro"><div class="comm-ico">🥇</div><div class="comm-name">Oro</div><div class="comm-val comm-loading">—</div><div class="comm-var neu">—</div></div>
+    <div class="comm-card" id="cLitio"><div class="comm-ico">🔋</div><div class="comm-name">Litio</div><div class="comm-val comm-loading">—</div><div class="comm-var neu">—</div></div>
+  </div>
+  <div class="sh"><div class="st"><em>02</em> EXPORTACIONES POR COMPLEJO</div></div>
+  <div class="tbl-wrap"><table><thead><tr><th>Complejo</th><th>Prov.</th><th>U$S M.</th><th>Var.A.</th><th>Part.</th><th>Acción</th></tr></thead><tbody>
+    <tr><td>Sojero</td><td style="color:var(--muted)">SF/ER</td><td>$14,820</td><td class="pos">+6.2%</td><td>24.1%</td><td><span class="ot crecer">▲ CRECER</span></td></tr>
+    <tr><td>Cerealero</td><td style="color:var(--muted)">SF/ER</td><td>$7,340</td><td class="pos">+4.8%</td><td>11.9%</td><td><span class="ot crecer">▲ CRECER</span></td></tr>
+    <tr><td>Petróleo y Gas</td><td style="color:var(--muted)">SC</td><td>$5,910</td><td class="pos">+8.7%</td><td>9.6%</td><td><span class="ot crecer">▲ CRECER</span></td></tr>
+    <tr><td>Minería</td><td style="color:var(--muted)">SJ</td><td>$3,840</td><td class="pos">+12.3%</td><td>6.2%</td><td><span class="ot crecer">▲ CRECER</span></td></tr>
+    <tr><td>Avícola</td><td style="color:var(--muted)">ER</td><td>$1,240</td><td class="pos">+7.8%</td><td>2.0%</td><td><span class="ot crecer">▲ CRECER</span></td></tr>
+    <tr><td>Vitivinícola</td><td style="color:var(--muted)">SJ</td><td>$980</td><td class="pos">+5.2%</td><td>1.6%</td><td><span class="ot defender">◆ DEFENDER</span></td></tr>
+    <tr><td>Pesca</td><td style="color:var(--muted)">SC</td><td>$870</td><td class="pos">+4.1%</td><td>1.4%</td><td><span class="ot defender">◆ DEFENDER</span></td></tr>
+    <tr><td>Maquinaria Agrícola</td><td style="color:var(--muted)">SF</td><td>$420</td><td class="pos">+8.4%</td><td>0.7%</td><td><span class="ot crecer">▲ CRECER</span></td></tr>
+    <tr><td>Software / IT</td><td style="color:var(--muted)">SF</td><td>$310</td><td class="pos">+11.2%</td><td>0.5%</td><td><span class="ot crecer">▲ CRECER</span></td></tr>
+  </tbody></table></div>
+  <div class="sh"><div class="st"><em>03</em> TCE POR SECTOR EXPORTADOR</div></div>
+  <div class="g4">
+    <div class="card card-stripe stripe-green"><div class="card-top"><span class="card-ico">🌾</span><span class="tag tag-green">AGRO</span></div><div class="card-val pos">~$850</div><div class="card-lbl">TCE agropecuario</div><div class="card-sub">Retención soja: 33%</div></div>
+    <div class="card card-stripe stripe-green"><div class="card-top"><span class="card-ico">🛢</span><span class="tag tag-green">HIDRO</span></div><div class="card-val pos">~$1,020</div><div class="card-lbl">TCE hidrocarburos</div><div class="card-sub">Retención: 8%</div></div>
+    <div class="card card-stripe stripe-green"><div class="card-top"><span class="card-ico">🥇</span><span class="tag tag-green">MINERÍA</span></div><div class="card-val pos">~$1,010</div><div class="card-lbl">TCE minería</div><div class="card-sub">Retención: 5-12%</div></div>
+    <div class="card card-stripe stripe-green"><div class="card-top"><span class="card-ico">💻</span><span class="tag tag-green">SOFTWARE</span></div><div class="card-val pos">~$1,050</div><div class="card-lbl">TCE conocimiento</div><div class="card-sub">Sin retenciones</div></div>
+  </div>
+</div>
 
 </main>
-
-<!-- NEWS PANEL -->
 <aside class="news-panel">
-  <div class="news-hdr">
-    <span class="news-title">Noticias · Sectorial</span>
-    <span class="news-count" id="newsCount">0</span>
+  <div class="news-hdr"><span class="news-title">Noticias Sectorial</span><span class="news-count" id="newsCount">0</span></div>
+  <div class="nf">
+    <button class="nfc active" onclick="filterNews('todas')" id="nfT">Todas</button>
+    <button class="nfc" onclick="filterNews('alertas')" id="nfA">⚠ Alertas</button>
+    <button class="nfc" onclick="filterNews('positivo')" id="nfP">▲ Positivas</button>
+    <button class="nfc" onclick="filterNews('prov')" id="nfPv">Provincia</button>
   </div>
-  <div class="news-filters">
-    <button class="nf-chip active" onclick="filterNews('todas')" id="nfTodas">Todas</button>
-    <button class="nf-chip" onclick="filterNews('alertas')" id="nfAlertas">⚠ Alertas</button>
-    <button class="nf-chip" onclick="filterNews('positivo')" id="nfPositivo">▲ Positivas</button>
-    <button class="nf-chip" onclick="filterNews('prov')" id="nfProv">Provincia</button>
-  </div>
-  <div class="news-list" id="newsList">
-    <div class="news-empty">Sin backend conectado.<br>Configurá Render para ver noticias en vivo.</div>
-  </div>
+  <div class="news-list" id="newsList"><div class="news-empty">Conectá el backend Render para noticias clasificadas por IA.</div></div>
 </aside>
-
-</div><!-- /layout -->
-
+</div>
 <script>
-// ════════════════════════════════════════════════════
-// CONFIG
-// ════════════════════════════════════════════════════
-const API_BASE = "https://eco-radar-backend.onrender.com"; // ← tu URL de Render
+const API_BASE="https://eco-radar-backend.onrender.com";
+const S={prov:"SF",opp:"todas",size:"todas",period:"anual",newsFilter:"todas",tab:"actividad",sectoresData:{},noticias:[],indicadores:{}};
+const $=id=>document.getElementById(id);
+const fmt=n=>Number(n).toLocaleString('es-AR');
+const fmtUSD=n=>`$${Number(n).toLocaleString('en-US',{maximumFractionDigits:2})}`;
+const vc=v=>v>1?'pos':v<-0.5?'neg':'neu';
+const vs=v=>v>0?'+':'';
+const tna2tea=tna=>((1+tna/100/365)**365-1)*100;
+async function safeGet(url,timeout=8000){try{const r=await fetch(url,{signal:AbortSignal.timeout(timeout)});if(!r.ok)throw 0;return await r.json();}catch{return null;}}
 
-// ════════════════════════════════════════════════════
-// STATE
-// ════════════════════════════════════════════════════
-const S = {
-  prov:"SF", opp:"todas", size:"todas", period:"anual",
-  newsFilter:"todas", tab:"actividad",
-  sectoresData:{}, noticias:[], indicadores:{}
-};
-
-// ════════════════════════════════════════════════════
-// DATOS FALLBACK
-// ════════════════════════════════════════════════════
-const FALLBACK = {
-  SF:{provincia:"Santa Fe",var_anual:4.2,var_mensual:0.8,sectores:[
-    {codigo:"A011",nombre:"Agricultura – Cereales y Oleaginosas",varA:6.1,varM:1.2,indice:88,opp:"crecer",size:"mediana"},
-    {codigo:"C261",nombre:"Maquinaria Agrícola",varA:8.4,varM:2.1,indice:95,opp:"crecer",size:"mediana"},
-    {codigo:"C101",nombre:"Frigoríficos y Alimentos",varA:5.8,varM:1.5,indice:92,opp:"crecer",size:"mediana"},
-    {codigo:"J620",nombre:"Servicios Tecnológicos",varA:11.2,varM:2.8,indice:43,opp:"crecer",size:"pequena"},
-    {codigo:"G461",nombre:"Comercio Mayorista Agro",varA:4.7,varM:0.9,indice:78,opp:"crecer",size:"pequena"},
-    {codigo:"C241",nombre:"Metalmecánica",varA:3.1,varM:0.6,indice:71,opp:"defender",size:"mediana"},
-    {codigo:"A012",nombre:"Horticultura",varA:2.4,varM:0.3,indice:45,opp:"defender",size:"pequena"},
-    {codigo:"H491",nombre:"Transporte de Cargas",varA:0.9,varM:0.2,indice:62,opp:"observar",size:"pequena"},
-    {codigo:"I551",nombre:"Hotelería y Gastronomía",varA:1.2,varM:0.3,indice:38,opp:"observar",size:"micro"},
-    {codigo:"G471",nombre:"Comercio Minorista",varA:-1.8,varM:-0.4,indice:55,opp:"salir",size:"micro"},
-    {codigo:"C131",nombre:"Industria Textil",varA:-3.2,varM:-0.7,indice:34,opp:"salir",size:"pequena"},
-    {codigo:"F411",nombre:"Construcción Residencial",varA:-5.1,varM:-1.2,indice:40,opp:"salir",size:"pequena"},
-  ]},
-  ER:{provincia:"Entre Ríos",var_anual:2.1,var_mensual:-0.3,sectores:[
-    {codigo:"A022",nombre:"Avicultura",varA:7.8,varM:1.9,indice:90,opp:"crecer",size:"mediana"},
-    {codigo:"I551",nombre:"Turismo Termal",varA:9.1,varM:2.2,indice:65,opp:"crecer",size:"pequena"},
-    {codigo:"C101",nombre:"Industria Avícola",varA:6.9,varM:1.4,indice:88,opp:"crecer",size:"mediana"},
-    {codigo:"A011",nombre:"Agricultura – Cereales",varA:5.2,varM:0.8,indice:82,opp:"crecer",size:"mediana"},
-    {codigo:"A031",nombre:"Pesca Continental",varA:3.4,varM:0.5,indice:48,opp:"defender",size:"pequena"},
-    {codigo:"F411",nombre:"Obras Públicas",varA:4.2,varM:0.7,indice:58,opp:"defender",size:"pequena"},
-    {codigo:"C241",nombre:"Metalmecánica",varA:0.8,varM:0.1,indice:51,opp:"observar",size:"pequena"},
-    {codigo:"H491",nombre:"Transporte y Logística",varA:1.1,varM:0.2,indice:55,opp:"observar",size:"pequena"},
-    {codigo:"G471",nombre:"Comercio Minorista",varA:-2.4,varM:-0.6,indice:48,opp:"salir",size:"micro"},
-    {codigo:"C161",nombre:"Industria Forestal",varA:-2.1,varM:-0.5,indice:42,opp:"salir",size:"pequena"},
-  ]},
-  SJ:{provincia:"San Juan",var_anual:1.4,var_mensual:0.5,sectores:[
-    {codigo:"D351",nombre:"Energía Solar y Renovable",varA:15.4,varM:3.8,indice:42,opp:"crecer",size:"pequena"},
-    {codigo:"B051",nombre:"Minería – Oro y Plata",varA:12.3,varM:3.1,indice:95,opp:"crecer",size:"mediana"},
-    {codigo:"B091",nombre:"Servicios a la Minería",varA:8.1,varM:1.8,indice:72,opp:"crecer",size:"mediana"},
-    {codigo:"A013",nombre:"Olivicultura",varA:6.8,varM:1.5,indice:55,opp:"crecer",size:"pequena"},
-    {codigo:"C110",nombre:"Elaboración de Vinos",varA:5.2,varM:1.1,indice:74,opp:"crecer",size:"mediana"},
-    {codigo:"F411",nombre:"Construcción Minera",varA:7.2,varM:1.6,indice:65,opp:"crecer",size:"pequena"},
-    {codigo:"A011",nombre:"Vitivinicultura",varA:3.6,varM:0.7,indice:68,opp:"defender",size:"pequena"},
-    {codigo:"I551",nombre:"Turismo Aventura",varA:4.8,varM:1.0,indice:38,opp:"defender",size:"micro"},
-    {codigo:"G471",nombre:"Comercio Minorista",varA:-1.2,varM:-0.3,indice:44,opp:"observar",size:"micro"},
-    {codigo:"C241",nombre:"Minero-Metalurgia",varA:-3.8,varM:-0.8,indice:35,opp:"salir",size:"pequena"},
-  ]},
-  SC:{provincia:"Santa Cruz",var_anual:3.8,var_mensual:1.1,sectores:[
-    {codigo:"D351",nombre:"Energía Eólica y Renovable",varA:18.6,varM:4.2,indice:58,opp:"crecer",size:"pequena"},
-    {codigo:"B091",nombre:"Servicios Oil & Gas",varA:10.2,varM:2.5,indice:85,opp:"crecer",size:"mediana"},
-    {codigo:"B060",nombre:"Extracción Petróleo y Gas",varA:8.7,varM:2.1,indice:98,opp:"crecer",size:"mediana"},
-    {codigo:"H491",nombre:"Logística Oil & Gas",varA:7.8,varM:1.9,indice:68,opp:"crecer",size:"pequena"},
-    {codigo:"I551",nombre:"Turismo Glaciares",varA:6.2,varM:1.4,indice:52,opp:"crecer",size:"micro"},
-    {codigo:"F421",nombre:"Construcción Infraestructura",varA:5.9,varM:1.3,indice:70,opp:"crecer",size:"pequena"},
-    {codigo:"A031",nombre:"Pesca Marítima",varA:4.1,varM:0.8,indice:72,opp:"defender",size:"mediana"},
-    {codigo:"C101",nombre:"Procesamiento de Pescado",varA:3.8,varM:0.7,indice:65,opp:"defender",size:"mediana"},
-    {codigo:"A014",nombre:"Ganadería Ovina",varA:-1.4,varM:-0.3,indice:45,opp:"observar",size:"pequena"},
-    {codigo:"G471",nombre:"Comercio Minorista",varA:-0.8,varM:-0.2,indice:42,opp:"observar",size:"micro"},
-  ]},
-};
-
-// Riesgo crediticio por sector + provincia
-const RIESGO_DATA = {
-  SF:[
-    {nombre:"Maquinaria Agrícola",nivel:"bajo",mora:1.2,cobrabilidad:96,varCartera:+18,drivers:"Campaña 24/25 récord. Alta demanda de renovación de equipos. Exportador neto. Bajo riesgo sistémico.",accion:"Ampliar líneas. Ofrecer leasing agrícola."},
-    {nombre:"Frigoríficos y Alimentos",nivel:"bajo",mora:1.8,cobrabilidad:94,varCartera:+12,drivers:"Apertura de mercados. Tipo de cambio favorable. Margen exportador robusto.",accion:"Capital de trabajo y prefinanciación de exportaciones."},
-    {nombre:"Agricultura – Cereales",nivel:"bajo",mora:1.4,cobrabilidad:95,varCartera:+15,drivers:"Buenos precios internacionales. Campaña normal sin eventos climáticos severos.",accion:"Warrants, crédito de cosecha, cuentas corrientes."},
-    {nombre:"Servicios Tecnológicos",nivel:"bajo",mora:0.9,cobrabilidad:97,varCartera:+22,drivers:"Exportador de servicios. Factura en dólares. Sin exposición cambiaria negativa.",accion:"Capital de trabajo, nómina, crédito blando innovación."},
-    {nombre:"Metalmecánica",nivel:"medio",mora:3.1,cobrabilidad:88,varCartera:+5,drivers:"Dependiente del ciclo agrícola. Sensible a tasas. Demanda moderada.",accion:"Monitorear. Mantener posición actual."},
-    {nombre:"Transporte de Cargas",nivel:"medio",mora:4.2,cobrabilidad:84,varCartera:-2,drivers:"Costos operativos en alza. Margen comprimido por combustibles.",accion:"Revisión de garantías. Límites conservadores."},
-    {nombre:"Comercio Minorista",nivel:"alto",mora:7.8,cobrabilidad:71,varCartera:-8,drivers:"Caída del consumo real. Alta informalidad. Competencia digital.",accion:"Reducir exposición. No renovar sin garantías sólidas."},
-    {nombre:"Industria Textil",nivel:"alto",mora:9.2,cobrabilidad:65,varCartera:-14,drivers:"Competencia importada. Caída de ventas. Alta informalidad laboral.",accion:"Salir ordenadamente. No originar nuevo crédito."},
-    {nombre:"Construcción Residencial",nivel:"critico",mora:12.4,cobrabilidad:58,varCartera:-18,drivers:"Sin crédito hipotecario accesible. Costos en dólares. Obra parada.",accion:"Máxima cautela. Solo con garantía hipotecaria AAA."},
-  ],
-  ER:[
-    {nombre:"Avicultura",nivel:"bajo",mora:1.1,cobrabilidad:97,varCartera:+20,drivers:"Líder exportador en la región. Integración vertical. Muy baja mora histórica.",accion:"Crecer agresivamente. Prefinanciación exportaciones."},
-    {nombre:"Turismo Termal",nivel:"bajo",mora:2.1,cobrabilidad:93,varCartera:+16,drivers:"Boom post-pandemia sostenido. Alta ocupación. Inversión en infraestructura.",accion:"Crédito inversión hotelera. Capital de trabajo temporada."},
-    {nombre:"Industria Avícola",nivel:"bajo",mora:1.4,cobrabilidad:95,varCartera:+14,drivers:"Mismo driver que avicultura. Precios internacionales favorables.",accion:"Ampliar líneas. Equipamiento y frío."},
-    {nombre:"Pesca Continental",nivel:"medio",mora:3.8,cobrabilidad:86,varCartera:+4,drivers:"Actividad estacional. Mercado interno limitado.",accion:"Posición estable. Vigilar estacionalidad."},
-    {nombre:"Comercio Minorista",nivel:"alto",mora:8.1,cobrabilidad:68,varCartera:-10,drivers:"Caída consumo real en provincias del interior.",accion:"Reducir exposición. Priorizar garantías."},
-    {nombre:"Industria Forestal",nivel:"alto",mora:6.4,cobrabilidad:74,varCartera:-8,drivers:"Contracción demanda construcción. Precios deprimidos.",accion:"Revisión cartera. No originar.",},
-  ],
-  SJ:[
-    {nombre:"Minería – Oro y Plata",nivel:"bajo",mora:0.8,cobrabilidad:98,varCartera:+25,drivers:"Precio del oro en máximos históricos. Veladero y Josemaría en expansión.",accion:"Máxima prioridad. Crédito corporativo, nómina, proveedores."},
-    {nombre:"Energía Solar",nivel:"bajo",mora:1.0,cobrabilidad:97,varCartera:+30,drivers:"Licitaciones RENOVAR. Flujo contractual garantizado por CAMMESA.",accion:"Project finance. Estructurar con flujo de cobros.",},
-    {nombre:"Servicios a la Minería",nivel:"bajo",mora:1.6,cobrabilidad:95,varCartera:+18,drivers:"Encadenado a minería. Alta predictibilidad de demanda.",accion:"Capital de trabajo. Equipamiento."},
-    {nombre:"Elaboración de Vinos",nivel:"medio",mora:3.2,cobrabilidad:89,varCartera:+8,drivers:"Exportación sostenida pero mercado interno ajustado.",accion:"Mantener. Prefinanciación exportaciones atractiva."},
-    {nombre:"Vitivinicultura (uva)",nivel:"medio",mora:3.8,cobrabilidad:86,varCartera:+4,drivers:"Dependiente precio uva. Pequeños productores con baja formalización.",accion:"Monitorear. Garantías reales requeridas."},
-    {nombre:"Minero-Metalurgia",nivel:"alto",mora:7.2,cobrabilidad:72,varCartera:-10,drivers:"Contracción por menor demanda de procesamiento secundario.",accion:"Reducir gradualmente. No originar sin garantía."},
-  ],
-  SC:[
-    {nombre:"Extracción Petróleo y Gas",nivel:"bajo",mora:0.6,cobrabilidad:99,varCartera:+22,drivers:"YPF + operadoras privadas. Contratos de largo plazo. Reservas probadas.",accion:"Máxima prioridad. Nómina, proveedores, cash management."},
-    {nombre:"Energía Eólica",nivel:"bajo",mora:0.9,cobrabilidad:98,varCartera:+35,drivers:"Parques eólicos con PPA garantizados. Flujo predecible.",accion:"Project finance estructurado. Alta rentabilidad."},
-    {nombre:"Servicios Oil & Gas",nivel:"bajo",mora:1.2,cobrabilidad:96,varCartera:+20,drivers:"Encadenado a petróleo. Contratos con operadoras de primer nivel.",accion:"Ampliar líneas de capital de trabajo y equipamiento."},
-    {nombre:"Pesca Marítima",nivel:"medio",mora:2.8,cobrabilidad:91,varCartera:+6,drivers:"Estacional. Dependiente de cuotas y precios internacionales.",accion:"Mantener. Prefinanciación exportaciones interesante."},
-    {nombre:"Construcción Infraestructura",nivel:"medio",mora:3.4,cobrabilidad:88,varCartera:+10,drivers:"Obras públicas atadas al presupuesto provincial. Riesgo político.",accion:"Vigilar continuidad obras. Garantías contractuales."},
-    {nombre:"Ganadería Ovina",nivel:"alto",mora:6.8,cobrabilidad:75,varCartera:-6,drivers:"Caída precio lana. Población ovina en baja. Rentabilidad deteriorada.",accion:"Reducir exposición. Sin nuevas operaciones."},
-  ],
-};
-
-const SPARK = {
-  SF:{"A011":[4,6,5,8,7,9,6,10,7,6,8,7],"C261":[4,5,6,7,6,8,7,9,8,9,8,8],"C101":[3,4,5,6,5,6,7,6,5,7,6,6],"J620":[5,6,7,8,9,9,10,11,11,11,11,11],"G461":[2,3,4,3,4,5,4,5,5,5,5,5],"C241":[1,2,3,2,3,4,3,4,3,4,3,3],"A012":[2,3,2,4,3,3,2,3,4,2,3,2],"H491":[1,0,1,1,0,1,1,0,1,1,0,1],"I551":[0,1,0,1,1,1,1,1,1,1,1,1],"G471":[2,1,0,-1,0,-1,-2,-1,-2,-1,-2,-2],"C131":[1,2,1,-1,0,-1,-2,-1,-3,-2,-3,-3],"F411":[1,0,-1,-2,-3,-3,-4,-4,-5,-5,-5,-5]},
-  ER:{"A022":[4,5,6,7,7,8,7,8,8,8,8,8],"I551":[3,5,6,7,8,8,9,9,9,9,9,9],"C101":[4,5,5,6,7,7,7,7,7,7,7,7],"A011":[3,4,5,4,5,6,5,6,5,6,5,5],"A031":[2,2,3,3,3,4,3,3,4,3,3,3],"F411":[1,2,3,3,4,4,4,4,4,4,4,4],"C241":[0,1,0,1,1,0,1,1,0,1,0,1],"H491":[0,1,1,1,1,1,1,1,1,1,1,1],"G471":[1,0,-1,-1,-2,-2,-2,-2,-2,-2,-2,-2],"C161":[1,1,0,0,-1,-1,-2,-2,-2,-2,-2,-2]},
-  SJ:{"D351":[5,7,9,11,12,13,14,15,15,15,15,15],"B051":[5,7,8,9,10,11,11,12,12,12,12,12],"B091":[3,4,5,6,7,8,8,8,8,8,8,8],"A013":[3,4,5,5,6,7,7,7,7,7,7,7],"C110":[2,3,4,4,5,5,5,5,5,5,5,5],"F411":[3,4,5,6,6,7,7,7,7,7,7,7],"A011":[2,3,3,4,3,4,4,4,4,4,4,4],"I551":[2,3,3,4,4,5,5,5,5,5,5,5],"G471":[1,0,0,-1,0,-1,-1,-1,-1,-1,-1,-1],"C241":[1,0,-1,-2,-2,-3,-3,-4,-4,-4,-4,-4]},
-  SC:{"D351":[5,8,10,13,15,17,18,19,19,19,19,19],"B091":[4,5,6,8,9,10,10,10,10,10,10,10],"B060":[4,6,7,7,8,8,9,9,9,9,9,9],"H491":[3,4,5,6,7,8,8,8,8,8,8,8],"I551":[2,4,5,5,6,6,6,6,6,6,6,6],"F421":[2,3,4,5,5,6,6,6,6,6,6,6],"A031":[2,3,3,4,4,4,4,4,4,4,4,4],"C101":[2,3,3,4,4,4,4,4,4,4,4,4],"A014":[1,0,0,-1,0,-1,-1,-1,-1,-1,-1,-1],"G471":[1,0,0,0,0,-1,0,-1,-1,-1,-1,-1]},
-};
-
-// ════════════════════════════════════════════════════
-// FETCH
-// ════════════════════════════════════════════════════
-async function safeGet(url) {
-  try { const r = await fetch(url); if(!r.ok) throw 0; return await r.json(); }
-  catch { return null; }
+// COMMODITIES — Yahoo Finance via allorigins proxy
+async function fetchCommodity(sym){
+  const url=`https://api.allorigins.win/raw?url=${encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=5d`)}`;
+  const d=await safeGet(url,12000);
+  if(!d?.chart?.result?.[0])return null;
+  const meta=d.chart.result[0].meta;
+  const price=meta.regularMarketPrice;
+  const prev=meta.chartPreviousClose||meta.previousClose;
+  return{price,chg:prev?((price-prev)/prev*100):null};
 }
 
-async function refreshAll() {
-  document.getElementById('lastUpdate').textContent = "actualizando...";
-  const [ind, nots, sects] = await Promise.all([
-    safeGet(`${API_BASE}/api/indicadores`),
-    safeGet(`${API_BASE}/api/noticias`),
-    safeGet(`${API_BASE}/api/sectores/${S.prov}`),
-  ]);
-  if(ind)  { S.indicadores = ind; updateMacro(ind); updateTicker(ind); }
-  if(nots) { S.noticias = nots.items||[]; renderNoticias(); }
-  if(sects){ S.sectoresData[S.prov] = sects; }
-  renderActividad();
-  document.getElementById('lastUpdate').textContent =
-    new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+const COMM_MAP=[
+  {id:'cSoja',    sym:'ZS=F', fb:'$368/bu'},
+  {id:'cMaiz',    sym:'ZC=F', fb:'$162/bu'},
+  {id:'cTrigo',   sym:'ZW=F', fb:'$198/bu'},
+  {id:'cPetroleo',sym:'CL=F', fb:'$78/bbl'},
+  {id:'cOro',     sym:'GC=F', fb:'$3,180/oz'},
+  {id:'cLitio',   sym:'LCO=F',fb:'$12.4k/t'},
+];
+
+async function fetchAllCommodities(){
+  const ts=new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+  const results=await Promise.allSettled(COMM_MAP.map(c=>fetchCommodity(c.sym)));
+  $('commTs')&&($('commTs').textContent=`actualizado ${ts}`);
+  results.forEach((res,i)=>{
+    const cfg=COMM_MAP[i];const card=$(cfg.id);if(!card)return;
+    const valEl=card.querySelector('.comm-val');const varEl=card.querySelector('.comm-var');
+    valEl.classList.remove('comm-loading');
+    if(res.status==='fulfilled'&&res.value){
+      const{price,chg}=res.value;
+      valEl.textContent=fmtUSD(price);
+      if(chg!==null){const sign=chg>0?'+':'';varEl.textContent=`${sign}${chg.toFixed(2)}% hoy`;varEl.className=`comm-var ${vc(chg)}`;}
+    } else{valEl.textContent=cfg.fb;varEl.textContent='sin conexión';varEl.className='comm-var neu';}
+  });
+  updateTickerFromDOM();
 }
 
-// ════════════════════════════════════════════════════
-// TICKER
-// ════════════════════════════════════════════════════
-function updateTicker(ind) {
-  const d = ind?.dolar||{}, b = ind?.bcra||{};
-  const items = [
-    {l:"MEP",   v: d.bolsa?.venta    ? `$${fmt(d.bolsa.venta)}`    : "—", c:"info"},
-    {l:"CCL",   v: d.contadoconliqui?.venta ? `$${fmt(d.contadoconliqui.venta)}` : "—", c:"info"},
-    {l:"BLUE",  v: d.blue?.venta     ? `$${fmt(d.blue.venta)}`     : "—", c:"neu"},
-    {l:"OFICIAL",v:d.oficial?.venta  ? `$${fmt(d.oficial.venta)}`  : "—", c:"info"},
-    {l:"INFLACIÓN",v:b.inflacion_mensual ? `${b.inflacion_mensual}% mens.` : "—", c:"neg"},
-    {l:"TASA BCRA",v:b.tasa_politica ? `${b.tasa_politica}% TNA`  : "—", c:"neu"},
-    {l:"RESERVAS",v:b.reservas_bn    ? `$${b.reservas_bn}B`        : "—", c:"info"},
-    {l:"SOJA",  v:"$368/t",  c:"pos"},
-    {l:"WTI",   v:"$78.4",   c:"pos"},
-    {l:"ORO",   v:"$3,180",  c:"pos"},
-  ];
-  const inner = items.map(i=>`<div class="tick-item"><span class="tick-lbl">${i.l}</span><span class="tick-val ${i.c}">${i.v}</span></div>`).join('');
-  // Duplicar para loop continuo
-  document.getElementById('tickerInner').innerHTML = inner + inner;
+// BCRA
+async function fetchBCRA(){
+  const f=async id=>{const d=await safeGet(`https://api.bcra.gob.ar/estadisticas/v2.0/datosvariable/${id}/1/1`);return d?.results?.[0]?.valor??null;};
+  const[infl,tasa,badlar,tm20,res]=await Promise.all([f(27),f(6),f(7),f(8),f(1)]);
+  return{infl,tasa,badlar,tm20,res};
+}
+async function fetchDolar(){
+  const d=await safeGet("https://dolarapi.com/v1/dolares");if(!d)return null;
+  const out={};for(const item of d)out[item.casa]=item;return out;
 }
 
-function buildDefaultTicker() {
-  updateTicker({});
-}
-
-// ════════════════════════════════════════════════════
-// MACRO UPDATE
-// ════════════════════════════════════════════════════
-function updateMacro(ind) {
-  const d = ind?.dolar||{}, b = ind?.bcra||{};
-  setText('mMep',    d.bolsa?.venta     ? `$${fmt(d.bolsa.venta)}`    : "—");
-  setText('mMepComp',d.bolsa?.compra    ? `compra: $${fmt(d.bolsa.compra)}` : "");
-  setText('mCcl',    d.contadoconliqui?.venta ? `$${fmt(d.contadoconliqui.venta)}` : "—");
-  setText('mBlue',   d.blue?.venta      ? `$${fmt(d.blue.venta)}`     : "—");
-  setText('mBlueComp',d.blue?.compra    ? `compra: $${fmt(d.blue.compra)}` : "");
-  setText('mOficial',d.oficial?.venta   ? `$${fmt(d.oficial.venta)}`  : "—");
-  setText('mOficialComp',d.oficial?.compra ? `compra: $${fmt(d.oficial.compra)}` : "");
-  if(b.inflacion_mensual) setText('mInflMens', `${b.inflacion_mensual}%`);
-  if(b.tasa_politica)     setText('mTasaBcra', `${b.tasa_politica}%`);
-  if(b.reservas_bn)       setText('mReservas', `$${b.reservas_bn}B`);
-  if(b.base_monetaria)    setText('mBase', `$${b.base_monetaria}B`);
-  // Brecha
-  if(d.blue?.venta && d.oficial?.venta) {
-    const brecha = ((d.blue.venta/d.oficial.venta - 1)*100).toFixed(1);
-    setText('mBrechaGrd', `+${brecha}%`);
-    setText('mBrecha', `brecha vs oficial: +${brecha}%`);
+function updateMacroUI(dolar,bcra){
+  if(dolar){
+    const mep=dolar.bolsa,ccl=dolar.contadoconliqui,blue=dolar.blue,of=dolar.oficial;
+    if(mep){$('mMep').textContent=`$${fmt(mep.venta)}`;$('mMepC').textContent=`compra: $${fmt(mep.compra)}`;}
+    if(ccl)$('mCcl').textContent=`$${fmt(ccl.venta)}`;
+    if(blue){$('mBlue').textContent=`$${fmt(blue.venta)}`;$('mBlueC').textContent=`compra: $${fmt(blue.compra)}`;}
+    if(of){$('mOfic').textContent=`$${fmt(of.venta)}`;$('mOficC').textContent=`compra: $${fmt(of.compra)}`;}
+    if(blue&&of){const br=((blue.venta/of.venta-1)*100).toFixed(1);$('mBrecha').textContent=`brecha: +${br}%`;$('mBrechaG').textContent=`+${br}%`;}
   }
+  if(bcra){
+    if(bcra.infl)$('mInfl').textContent=`${bcra.infl}%`;
+    if(bcra.tasa){$('mTasaBcra').textContent=`${bcra.tasa}% TNA`;$('tPolitica').textContent=`${bcra.tasa}% TNA`;$('tPoliticaTEA').textContent=`TEA: ${tna2tea(bcra.tasa).toFixed(1)}%`;}
+    if(bcra.badlar){$('tBadlar').textContent=`${bcra.badlar}% TNA`;$('tBadlarTEA').textContent=`TEA: ${tna2tea(bcra.badlar).toFixed(1)}%`;const pf=(bcra.badlar*0.97).toFixed(1);$('tPF').textContent=`~${pf}% TNA`;$('tPFTEA').textContent=`TEA: ${tna2tea(pf).toFixed(1)}%`;$('tPyme').textContent=`~${(Number(bcra.badlar)+15).toFixed(0)}% TNA`;}
+    if(bcra.tm20){$('tTm20').textContent=`${bcra.tm20}% TNA`;$('tTm20TEA').textContent=`TEA: ${tna2tea(bcra.tm20).toFixed(1)}%`;}
+    if(bcra.res)$('mRes').textContent=`$${bcra.res}B`;
+  }
+  const ts=new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+  $('macroTs')&&($('macroTs').textContent=`actualizado ${ts}`);
 }
 
-function setText(id, val) { const el=document.getElementById(id); if(el) el.textContent=val; }
-function fmt(n) { return Number(n).toLocaleString('es-AR'); }
-
-// ════════════════════════════════════════════════════
-// RENDER ACTIVIDAD
-// ════════════════════════════════════════════════════
-function getProvData() { return S.sectoresData[S.prov] || FALLBACK[S.prov]; }
-function vc(v) { return v>1?'pos':v<-0.5?'neg':'neu'; }
-function vs(v) { return v>0?'+':''; }
-
-function oppTag(o) {
-  const m={crecer:'▲ CRECER',salir:'▼ SALIR',defender:'◆ DEFENDER',observar:'○ OBSERVAR'};
-  return `<span class="opp-tag ${o}">${m[o]||o}</span>`;
+function updateTickerFromDOM(){
+  const dolar=S._dolar,bcra=S._bcra;
+  const items=[];
+  if(dolar?.blue)items.push({l:"BLUE",v:`$${fmt(dolar.blue.venta)}`,c:"neu"});
+  if(dolar?.bolsa)items.push({l:"MEP",v:`$${fmt(dolar.bolsa.venta)}`,c:"info"});
+  if(dolar?.oficial)items.push({l:"OFICIAL",v:`$${fmt(dolar.oficial.venta)}`,c:"info"});
+  if(bcra?.infl)items.push({l:"IPC",v:`${bcra.infl}%`,c:"neg"});
+  if(bcra?.tasa)items.push({l:"TASA",v:`${bcra.tasa}%`,c:"neu"});
+  COMM_MAP.forEach((cfg,i)=>{const el=$(cfg.id);if(!el)return;const v=el.querySelector('.comm-val')?.textContent;const names=["SOJA","MAÍZ","TRIGO","WTI","ORO","LITIO"];if(v&&v!=='—')items.push({l:names[i],v,c:"info"});});
+  if(!items.length)return;
+  const html=items.map(i=>`<div class="tick-item"><span class="tick-lbl">${i.l}</span>&nbsp;<span class="${i.c}">${i.v}</span></div>`).join('');
+  $('tkr').innerHTML=html+html;
 }
 
-function sparkHtml(prov, cod) {
-  const h=(SPARK[prov]||{})[cod]||[0,0,0,0,0,0,0,0,0,0,0,0];
-  const mx=Math.max(...h.map(Math.abs),1);
-  return h.map(v=>{const ht=Math.max(2,Math.round(Math.abs(v)/mx*16));return`<div class="spark-bar ${v>=0?'pos':'neg'}" style="height:${ht}px"></div>`;}).join('');
+async function refreshAll(){
+  $('lastUpdate')&&($('lastUpdate').textContent="actualizando...");
+  const[dolar,bcra,nots,sects]=await Promise.all([fetchDolar(),fetchBCRA(),safeGet(`${API_BASE}/api/noticias`),safeGet(`${API_BASE}/api/sectores/${S.prov}`)]);
+  S._dolar=dolar;S._bcra=bcra;
+  if(dolar||bcra)updateMacroUI(dolar,bcra);
+  if(nots){S.noticias=nots.items||[];renderNoticias();}
+  if(sects)S.sectoresData[S.prov]=sects;
+  renderActividad();
+  fetchAllCommodities();
+  const ts=new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+  $('lastUpdate')&&($('lastUpdate').textContent=ts);
 }
 
-function renderActividad() {
-  const data = getProvData();
-  let sects = [...data.sectores];
-  if(S.opp!=='todas')  sects=sects.filter(s=>s.opp===S.opp);
-  if(S.size!=='todas') sects=sects.filter(s=>s.size===S.size);
-  sects.sort((a,b)=> (S.period==='anual'?b.varA-a.varA:b.varM-a.varM));
+// DATA
+const FB={SF:{provincia:"Santa Fe",var_anual:4.2,var_mensual:0.8,sectores:[{codigo:"A011",nombre:"Agricultura – Cereales y Oleaginosas",varA:6.1,varM:1.2,indice:88,opp:"crecer",size:"mediana"},{codigo:"C261",nombre:"Maquinaria Agrícola",varA:8.4,varM:2.1,indice:95,opp:"crecer",size:"mediana"},{codigo:"C101",nombre:"Frigoríficos y Alimentos",varA:5.8,varM:1.5,indice:92,opp:"crecer",size:"mediana"},{codigo:"J620",nombre:"Servicios Tecnológicos",varA:11.2,varM:2.8,indice:43,opp:"crecer",size:"pequena"},{codigo:"G461",nombre:"Comercio Mayorista Agro",varA:4.7,varM:0.9,indice:78,opp:"crecer",size:"pequena"},{codigo:"C241",nombre:"Metalmecánica",varA:3.1,varM:0.6,indice:71,opp:"defender",size:"mediana"},{codigo:"A012",nombre:"Horticultura",varA:2.4,varM:0.3,indice:45,opp:"defender",size:"pequena"},{codigo:"H491",nombre:"Transporte de Cargas",varA:0.9,varM:0.2,indice:62,opp:"observar",size:"pequena"},{codigo:"I551",nombre:"Hotelería y Gastronomía",varA:1.2,varM:0.3,indice:38,opp:"observar",size:"micro"},{codigo:"G471",nombre:"Comercio Minorista",varA:-1.8,varM:-0.4,indice:55,opp:"salir",size:"micro"},{codigo:"C131",nombre:"Industria Textil",varA:-3.2,varM:-0.7,indice:34,opp:"salir",size:"pequena"},{codigo:"F411",nombre:"Construcción Residencial",varA:-5.1,varM:-1.2,indice:40,opp:"salir",size:"pequena"}]},ER:{provincia:"Entre Ríos",var_anual:2.1,var_mensual:-0.3,sectores:[{codigo:"A022",nombre:"Avicultura",varA:7.8,varM:1.9,indice:90,opp:"crecer",size:"mediana"},{codigo:"I551",nombre:"Turismo Termal",varA:9.1,varM:2.2,indice:65,opp:"crecer",size:"pequena"},{codigo:"C101",nombre:"Industria Avícola",varA:6.9,varM:1.4,indice:88,opp:"crecer",size:"mediana"},{codigo:"A011",nombre:"Agricultura – Cereales",varA:5.2,varM:0.8,indice:82,opp:"crecer",size:"mediana"},{codigo:"A031",nombre:"Pesca Continental",varA:3.4,varM:0.5,indice:48,opp:"defender",size:"pequena"},{codigo:"F411",nombre:"Obras Públicas",varA:4.2,varM:0.7,indice:58,opp:"defender",size:"pequena"},{codigo:"C241",nombre:"Metalmecánica",varA:0.8,varM:0.1,indice:51,opp:"observar",size:"pequena"},{codigo:"H491",nombre:"Transporte y Logística",varA:1.1,varM:0.2,indice:55,opp:"observar",size:"pequena"},{codigo:"G471",nombre:"Comercio Minorista",varA:-2.4,varM:-0.6,indice:48,opp:"salir",size:"micro"},{codigo:"C161",nombre:"Industria Forestal",varA:-2.1,varM:-0.5,indice:42,opp:"salir",size:"pequena"}]},SJ:{provincia:"San Juan",var_anual:1.4,var_mensual:0.5,sectores:[{codigo:"D351",nombre:"Energía Solar y Renovable",varA:15.4,varM:3.8,indice:42,opp:"crecer",size:"pequena"},{codigo:"B051",nombre:"Minería – Oro y Plata",varA:12.3,varM:3.1,indice:95,opp:"crecer",size:"mediana"},{codigo:"B091",nombre:"Servicios a la Minería",varA:8.1,varM:1.8,indice:72,opp:"crecer",size:"mediana"},{codigo:"A013",nombre:"Olivicultura",varA:6.8,varM:1.5,indice:55,opp:"crecer",size:"pequena"},{codigo:"C110",nombre:"Elaboración de Vinos",varA:5.2,varM:1.1,indice:74,opp:"crecer",size:"mediana"},{codigo:"F411",nombre:"Construcción Minera",varA:7.2,varM:1.6,indice:65,opp:"crecer",size:"pequena"},{codigo:"A011",nombre:"Vitivinicultura",varA:3.6,varM:0.7,indice:68,opp:"defender",size:"pequena"},{codigo:"I551",nombre:"Turismo Aventura",varA:4.8,varM:1.0,indice:38,opp:"defender",size:"micro"},{codigo:"G471",nombre:"Comercio Minorista",varA:-1.2,varM:-0.3,indice:44,opp:"observar",size:"micro"},{codigo:"C241",nombre:"Minero-Metalurgia",varA:-3.8,varM:-0.8,indice:35,opp:"salir",size:"pequena"}]},SC:{provincia:"Santa Cruz",var_anual:3.8,var_mensual:1.1,sectores:[{codigo:"D351",nombre:"Energía Eólica y Renovable",varA:18.6,varM:4.2,indice:58,opp:"crecer",size:"pequena"},{codigo:"B091",nombre:"Servicios Oil & Gas",varA:10.2,varM:2.5,indice:85,opp:"crecer",size:"mediana"},{codigo:"B060",nombre:"Extracción Petróleo y Gas",varA:8.7,varM:2.1,indice:98,opp:"crecer",size:"mediana"},{codigo:"H491",nombre:"Logística Oil & Gas",varA:7.8,varM:1.9,indice:68,opp:"crecer",size:"pequena"},{codigo:"I551",nombre:"Turismo Glaciares",varA:6.2,varM:1.4,indice:52,opp:"crecer",size:"micro"},{codigo:"F421",nombre:"Construcción Infraestructura",varA:5.9,varM:1.3,indice:70,opp:"crecer",size:"pequena"},{codigo:"A031",nombre:"Pesca Marítima",varA:4.1,varM:0.8,indice:72,opp:"defender",size:"mediana"},{codigo:"C101",nombre:"Procesamiento de Pescado",varA:3.8,varM:0.7,indice:65,opp:"defender",size:"mediana"},{codigo:"A014",nombre:"Ganadería Ovina",varA:-1.4,varM:-0.3,indice:45,opp:"observar",size:"pequena"},{codigo:"G471",nombre:"Comercio Minorista",varA:-0.8,varM:-0.2,indice:42,opp:"observar",size:"micro"}]}};
+const RIESGO={SF:[{nombre:"Maquinaria Agrícola",nivel:"bajo",mora:1.2,cobr:96,varC:+18,d:"Campaña récord. Alta demanda.",a:"Ampliar. Leasing agrícola."},{nombre:"Frigoríficos y Alimentos",nivel:"bajo",mora:1.8,cobr:94,varC:+12,d:"Apertura mercados. TCE favorable.",a:"Capital trabajo + prefinanciación exportaciones."},{nombre:"Servicios Tecnológicos",nivel:"bajo",mora:0.9,cobr:97,varC:+22,d:"Exportador. Factura en USD.",a:"Capital de trabajo, nómina, innovación."},{nombre:"Agricultura – Cereales",nivel:"bajo",mora:1.4,cobr:95,varC:+15,d:"Buenos precios internacionales.",a:"Warrants, crédito cosecha."},{nombre:"Metalmecánica",nivel:"medio",mora:3.1,cobr:88,varC:+5,d:"Dependiente ciclo agrícola.",a:"Monitorear. Mantener posición."},{nombre:"Transporte de Cargas",nivel:"medio",mora:4.2,cobr:84,varC:-2,d:"Costos operativos en alza.",a:"Revisar garantías. Límites conservadores."},{nombre:"Comercio Minorista",nivel:"alto",mora:7.8,cobr:71,varC:-8,d:"Caída consumo. Alta informalidad.",a:"Reducir exposición."},{nombre:"Industria Textil",nivel:"alto",mora:9.2,cobr:65,varC:-14,d:"Competencia importada.",a:"Salir ordenadamente."},{nombre:"Construcción Residencial",nivel:"critico",mora:12.4,cobr:58,varC:-18,d:"Sin hipotecas. Costos en USD.",a:"Solo con garantía hipotecaria AAA."}],ER:[{nombre:"Avicultura",nivel:"bajo",mora:1.1,cobr:97,varC:+20,d:"Líder exportador. Integración vertical.",a:"Crecer agresivamente."},{nombre:"Turismo Termal",nivel:"bajo",mora:2.1,cobr:93,varC:+16,d:"Boom sostenido. Alta ocupación.",a:"Crédito inversión hotelera."},{nombre:"Industria Avícola",nivel:"bajo",mora:1.4,cobr:95,varC:+14,d:"Precios internacionales favorables.",a:"Ampliar. Equipamiento y frío."},{nombre:"Pesca Continental",nivel:"medio",mora:3.8,cobr:86,varC:+4,d:"Estacional.",a:"Vigilar estacionalidad."},{nombre:"Comercio Minorista",nivel:"alto",mora:8.1,cobr:68,varC:-10,d:"Caída consumo interior.",a:"Reducir. Priorizar garantías."},{nombre:"Industria Forestal",nivel:"alto",mora:6.4,cobr:74,varC:-8,d:"Contracción demanda construcción.",a:"No originar."}],SJ:[{nombre:"Minería – Oro y Plata",nivel:"bajo",mora:0.8,cobr:98,varC:+25,d:"Precio oro en máximos.",a:"Máxima prioridad. Corporativo + nómina."},{nombre:"Energía Solar",nivel:"bajo",mora:1.0,cobr:97,varC:+30,d:"Flujo CAMMESA garantizado.",a:"Project finance."},{nombre:"Servicios a la Minería",nivel:"bajo",mora:1.6,cobr:95,varC:+18,d:"Alta predictibilidad.",a:"Capital de trabajo. Equipamiento."},{nombre:"Elaboración de Vinos",nivel:"medio",mora:3.2,cobr:89,varC:+8,d:"Exportación sostenida.",a:"Mantener. Prefinanciación."},{nombre:"Vitivinicultura",nivel:"medio",mora:3.8,cobr:86,varC:+4,d:"Pequeños productores.",a:"Garantías reales requeridas."},{nombre:"Minero-Metalurgia",nivel:"alto",mora:7.2,cobr:72,varC:-10,d:"Menor demanda procesamiento.",a:"Reducir gradualmente."}],SC:[{nombre:"Extracción Petróleo y Gas",nivel:"bajo",mora:0.6,cobr:99,varC:+22,d:"Contratos largo plazo.",a:"Máxima prioridad. Nómina, cash."},{nombre:"Energía Eólica",nivel:"bajo",mora:0.9,cobr:98,varC:+35,d:"PPA garantizados.",a:"Project finance estructurado."},{nombre:"Servicios Oil & Gas",nivel:"bajo",mora:1.2,cobr:96,varC:+20,d:"Contratos operadoras primer nivel.",a:"Ampliar capital de trabajo."},{nombre:"Pesca Marítima",nivel:"medio",mora:2.8,cobr:91,varC:+6,d:"Estacional. Cuotas internacionales.",a:"Mantener. Prefinanciación."},{nombre:"Construcción Infraestructura",nivel:"medio",mora:3.4,cobr:88,varC:+10,d:"Obras atadas a presupuesto.",a:"Vigilar continuidad."},{nombre:"Ganadería Ovina",nivel:"alto",mora:6.8,cobr:75,varC:-6,d:"Caída precio lana.",a:"Reducir. Sin nuevas operaciones."}]};
+const SPARK={SF:{"A011":[4,6,5,8,7,9,6,10,7,6,8,7],"C261":[4,5,6,7,6,8,7,9,8,9,8,8],"C101":[3,4,5,6,5,6,7,6,5,7,6,6],"J620":[5,6,7,8,9,9,10,11,11,11,11,11],"G461":[2,3,4,3,4,5,4,5,5,5,5,5],"C241":[1,2,3,2,3,4,3,4,3,4,3,3],"A012":[2,3,2,4,3,3,2,3,4,2,3,2],"H491":[1,0,1,1,0,1,1,0,1,1,0,1],"I551":[0,1,0,1,1,1,1,1,1,1,1,1],"G471":[2,1,0,-1,0,-1,-2,-1,-2,-1,-2,-2],"C131":[1,2,1,-1,0,-1,-2,-1,-3,-2,-3,-3],"F411":[1,0,-1,-2,-3,-3,-4,-4,-5,-5,-5,-5]},ER:{"A022":[4,5,6,7,7,8,7,8,8,8,8,8],"I551":[3,5,6,7,8,8,9,9,9,9,9,9],"C101":[4,5,5,6,7,7,7,7,7,7,7,7],"A011":[3,4,5,4,5,6,5,6,5,6,5,5],"A031":[2,2,3,3,3,4,3,3,4,3,3,3],"F411":[1,2,3,3,4,4,4,4,4,4,4,4],"C241":[0,1,0,1,1,0,1,1,0,1,0,1],"H491":[0,1,1,1,1,1,1,1,1,1,1,1],"G471":[1,0,-1,-1,-2,-2,-2,-2,-2,-2,-2,-2],"C161":[1,1,0,0,-1,-1,-2,-2,-2,-2,-2,-2]},SJ:{"D351":[5,7,9,11,12,13,14,15,15,15,15,15],"B051":[5,7,8,9,10,11,11,12,12,12,12,12],"B091":[3,4,5,6,7,8,8,8,8,8,8,8],"A013":[3,4,5,5,6,7,7,7,7,7,7,7],"C110":[2,3,4,4,5,5,5,5,5,5,5,5],"F411":[3,4,5,6,6,7,7,7,7,7,7,7],"A011":[2,3,3,4,3,4,4,4,4,4,4,4],"I551":[2,3,3,4,4,5,5,5,5,5,5,5],"G471":[1,0,0,-1,0,-1,-1,-1,-1,-1,-1,-1],"C241":[1,0,-1,-2,-2,-3,-3,-4,-4,-4,-4,-4]},SC:{"D351":[5,8,10,13,15,17,18,19,19,19,19,19],"B091":[4,5,6,8,9,10,10,10,10,10,10,10],"B060":[4,6,7,7,8,8,9,9,9,9,9,9],"H491":[3,4,5,6,7,8,8,8,8,8,8,8],"I551":[2,4,5,5,6,6,6,6,6,6,6,6],"F421":[2,3,4,5,5,6,6,6,6,6,6,6],"A031":[2,3,3,4,4,4,4,4,4,4,4,4],"C101":[2,3,3,4,4,4,4,4,4,4,4,4],"A014":[1,0,0,-1,0,-1,-1,-1,-1,-1,-1,-1],"G471":[1,0,0,0,0,-1,0,-1,-1,-1,-1,-1]}};
 
-  const all = data.sectores;
-  const topC = all.filter(s=>s.opp==='crecer').sort((a,b)=>b.varA-a.varA).slice(0,4);
-  const topS = all.filter(s=>s.varA<0||s.opp==='salir').sort((a,b)=>a.varA-b.varA).slice(0,4);
-  const alertas = S.noticias.filter(n=>n.alerta_temprana&&(n.provincias||[]).includes(S.prov));
+function getProvData(){return S.sectoresData[S.prov]||FB[S.prov];}
+function oppTag(o){const m={crecer:'▲ CRECER',salir:'▼ SALIR',defender:'◆ DEFENDER',observar:'○ OBSERVAR'};return`<span class="ot ${o}">${m[o]||o}</span>`;}
+function sparkHtml(prov,cod){const h=(SPARK[prov]||{})[cod]||Array(12).fill(0);const mx=Math.max(...h.map(Math.abs),1);return h.map(v=>{const ht=Math.max(2,Math.round(Math.abs(v)/mx*13));return`<div class="sb ${v>=0?'pos':'neg'}" style="height:${ht}px"></div>`;}).join('');}
 
-  // Alert banner
-  const ab=document.getElementById('alertBanner');
-  if(alertas.length){
-    ab.classList.add('visible');
-    document.getElementById('alertText').textContent=alertas.map(a=>`${a.resumen_corto} [${a.fuente}]`).join(' · ');
-  } else ab.classList.remove('visible');
-
-  document.getElementById('actividadContent').innerHTML = `
+function renderActividad(){
+  const data=getProvData();let sects=[...data.sectores];
+  if(S.opp!=='todas')sects=sects.filter(s=>s.opp===S.opp);
+  if(S.size!=='todas')sects=sects.filter(s=>s.size===S.size);
+  sects.sort((a,b)=>S.period==='anual'?b.varA-a.varA:b.varM-a.varM);
+  const all=data.sectores;
+  const topC=all.filter(s=>s.opp==='crecer').sort((a,b)=>b.varA-a.varA).slice(0,4);
+  const topS=all.filter(s=>s.varA<0||s.opp==='salir').sort((a,b)=>a.varA-b.varA).slice(0,4);
+  const alertas=S.noticias.filter(n=>n.alerta_temprana&&(n.provincias||[]).includes(S.prov));
+  const ab=$('alertBanner');
+  if(alertas.length){ab.classList.add('visible');$('alertText').textContent=alertas.map(a=>`${a.resumen_corto} [${a.fuente}]`).join(' · ');}else ab.classList.remove('visible');
+  $('actContent').innerHTML=`
     <div class="kpi-row">
-      <div class="kpi-card"><div class="kpi-top"><span class="kpi-ico">📈</span><span class="kpi-badge ${vc(data.var_anual)}">ANUAL</span></div><div class="kpi-val ${vc(data.var_anual)}">${vs(data.var_anual)}${data.var_anual.toFixed(1)}%</div><div class="kpi-lbl">Var. Anual PBG · ${data.provincia}</div></div>
-      <div class="kpi-card"><div class="kpi-top"><span class="kpi-ico">📅</span><span class="kpi-badge ${vc(data.var_mensual)}">MENSUAL</span></div><div class="kpi-val ${vc(data.var_mensual)}">${vs(data.var_mensual)}${data.var_mensual.toFixed(1)}%</div><div class="kpi-lbl">Var. Mensual · Últ. dato</div></div>
-      <div class="kpi-card"><div class="kpi-top"><span class="kpi-ico">🏭</span><span class="kpi-badge neu">SECTORES</span></div><div class="kpi-val info">${all.length}</div><div class="kpi-lbl">Actividades SEPyME</div></div>
-      <div class="kpi-card"><div class="kpi-top"><span class="kpi-ico">⚠</span><span class="kpi-badge ${alertas.length?'neg':'pos'}">ALERTAS</span></div><div class="kpi-val ${alertas.length?'neg':'pos'}">${alertas.length}</div><div class="kpi-lbl">Alertas tempranas activas</div></div>
+      <div class="card card-stripe stripe-green"><div class="card-top"><span class="card-ico">📈</span><span class="tag tag-green">ANUAL</span></div><div class="card-val ${vc(data.var_anual)}">${vs(data.var_anual)}${data.var_anual.toFixed(1)}%</div><div class="card-lbl">Var. Anual PBG · ${data.provincia}</div></div>
+      <div class="card card-stripe stripe-yellow"><div class="card-top"><span class="card-ico">📅</span><span class="tag tag-yellow">MENSUAL</span></div><div class="card-val ${vc(data.var_mensual)}">${vs(data.var_mensual)}${data.var_mensual.toFixed(1)}%</div><div class="card-lbl">Var. Mensual · Últ. dato</div></div>
+      <div class="card card-stripe stripe-blue"><div class="card-top"><span class="card-ico">🏭</span><span class="tag tag-blue">SECTORES</span></div><div class="card-val info">${all.length}</div><div class="card-lbl">Actividades SEPyME</div></div>
+      <div class="card card-stripe stripe-red"><div class="card-top"><span class="card-ico">⚠</span><span class="tag ${alertas.length?'tag-red':'tag-green'}">${alertas.length?'ALERTAS':'OK'}</span></div><div class="card-val ${alertas.length?'neg':'pos'}">${alertas.length}</div><div class="card-lbl">Alertas tempranas</div></div>
     </div>
-
-    <div class="sec-hdr"><div class="sec-title"><em>01</em> FOCO COMERCIAL · ACCIONES PRIORITARIAS</div></div>
-    <div class="opp-split">
-      <div class="opp-panel crecer"><div class="opp-title crecer">▲ SECTORES PARA CRECER</div>
-        ${topC.map(s=>`<div class="opp-row"><div class="opp-row-name">${s.nombre}</div><div class="opp-row-vals tv-pos">${vs(s.varA)}${s.varA.toFixed(1)}% / ${vs(s.varM)}${s.varM.toFixed(1)}%</div></div>`).join('')}
-      </div>
-      <div class="opp-panel salir"><div class="opp-title salir">▼ PARA REDUCIR / SALIR</div>
-        ${topS.map(s=>`<div class="opp-row"><div class="opp-row-name">${s.nombre}</div><div class="opp-row-vals ${s.varA<0?'tv-neg':'tv-neu'}">${vs(s.varA)}${s.varA.toFixed(1)}% / ${vs(s.varM)}${s.varM.toFixed(1)}%</div></div>`).join('')}
-      </div>
+    <div class="sh"><div class="st"><em>01</em> FOCO COMERCIAL · ACCIONES PRIORITARIAS</div></div>
+    <div class="g-split">
+      <div class="opp-panel crecer"><div class="opp-title crecer">▲ SECTORES PARA CRECER</div>${topC.map(s=>`<div class="opp-row"><div class="opp-rn">${s.nombre}</div><div class="opp-rv pos">${vs(s.varA)}${s.varA.toFixed(1)}% / ${vs(s.varM)}${s.varM.toFixed(1)}%</div></div>`).join('')}</div>
+      <div class="opp-panel salir"><div class="opp-title salir">▼ REDUCIR / SALIR</div>${topS.map(s=>`<div class="opp-row"><div class="opp-rn">${s.nombre}</div><div class="opp-rv ${s.varA<0?'neg':'neu'}">${vs(s.varA)}${s.varA.toFixed(1)}% / ${vs(s.varM)}${s.varM.toFixed(1)}%</div></div>`).join('')}</div>
     </div>
-
-    <div class="sec-hdr">
-      <div class="sec-title"><em>02</em> DETALLE POR ACTIVIDAD</div>
-      <div class="period-toggle">
-        <button class="pt-btn ${S.period==='anual'?'active':''}" onclick="setPeriod('anual')">ANUAL</button>
-        <button class="pt-btn ${S.period==='mensual'?'active':''}" onclick="setPeriod('mensual')">MENSUAL</button>
-      </div>
-    </div>
-    <div class="chips">
-      ${['todas','crecer','defender','observar','salir'].map(o=>`<button class="chip ${S.opp===o?'active':''}" onclick="setChip('${o}')">${{todas:'Todas',crecer:'▲ Crecer',defender:'◆ Defender',observar:'○ Observar',salir:'▼ Salir'}[o]}</button>`).join('')}
-    </div>
-    <div class="sector-grid">
-      ${sects.map(s=>`
-        <div class="sc ${s.opp} ${s.opp==='crecer'?'top':''} ${s.opp==='salir'?'alert-card':''}">
-          <div class="sc-top"><div class="sc-name">${s.nombre}</div><div class="sc-code">${s.codigo}</div></div>
-          <div class="sc-metrics">
-            <div><div class="sc-m-val ${vc(s.varA)}">${vs(s.varA)}${s.varA.toFixed(1)}%</div><div class="sc-m-lbl">Var. Anual</div></div>
-            <div><div class="sc-m-val ${vc(s.varM)}">${vs(s.varM)}${s.varM.toFixed(1)}%</div><div class="sc-m-lbl">Var. Mens.</div></div>
-            <div><div class="sc-m-val" style="color:var(--cyan)">${s.indice}</div><div class="sc-m-lbl">Índice</div></div>
-          </div>
-          <div class="sparkline">${sparkHtml(S.prov, s.codigo)}</div>
-          <div class="sc-footer">${oppTag(s.opp)}<span class="sc-size">${s.size}</span></div>
-        </div>`).join('')}
-    </div>
-
-    <div class="sec-hdr"><div class="sec-title"><em>03</em> MATRIZ COMPLETA</div></div>
-    <div class="tbl-wrap"><table>
-      <thead><tr><th>Actividad</th><th>Cód.</th><th>Tamaño</th><th>Var. Anual</th><th>Var. Mensual</th><th>Índice</th><th>Acción</th></tr></thead>
-      <tbody>
-        ${all.sort((a,b)=>b.varA-a.varA).map(s=>`
-          <tr>
-            <td>${s.nombre}</td>
-            <td style="color:var(--muted)">${s.codigo}</td>
-            <td style="color:var(--muted);text-align:center">${s.size}</td>
-            <td class="${vc(s.varA)==='pos'?'tv-pos':vc(s.varA)==='neg'?'tv-neg':'tv-neu'}">${vs(s.varA)}${s.varA.toFixed(1)}%</td>
-            <td class="${vc(s.varM)==='pos'?'tv-pos':vc(s.varM)==='neg'?'tv-neg':'tv-neu'}">${vs(s.varM)}${s.varM.toFixed(1)}%</td>
-            <td style="color:var(--cyan)">${s.indice}</td>
-            <td style="text-align:center">${oppTag(s.opp)}</td>
-          </tr>`).join('')}
-      </tbody>
-    </table></div>`;
+    <div class="sh"><div class="st"><em>02</em> DETALLE POR ACTIVIDAD</div><div class="pt"><button class="ptb ${S.period==='anual'?'active':''}" onclick="setPeriod('anual')">ANUAL</button><button class="ptb ${S.period==='mensual'?'active':''}" onclick="setPeriod('mensual')">MENSUAL</button></div></div>
+    <div class="chips">${['todas','crecer','defender','observar','salir'].map(o=>`<button class="chip ${S.opp===o?'active':''}" onclick="setChip('${o}')">${{todas:'Todas',crecer:'▲ Crecer',defender:'◆ Defender',observar:'○ Observar',salir:'▼ Salir'}[o]}</button>`).join('')}</div>
+    <div class="g-sec">${sects.map(s=>`<div class="sc ${s.opp} ${s.opp==='crecer'?'top':''} ${s.opp==='salir'?'alert-card':''}"><div class="sc-top"><div class="sc-name">${s.nombre}</div><div class="sc-code">${s.codigo}</div></div><div class="sc-m"><div><div class="sc-mv ${vc(s.varA)}">${vs(s.varA)}${s.varA.toFixed(1)}%</div><div class="sc-ml">Anual</div></div><div><div class="sc-mv ${vc(s.varM)}">${vs(s.varM)}${s.varM.toFixed(1)}%</div><div class="sc-ml">Mens.</div></div><div><div class="sc-mv info">${s.indice}</div><div class="sc-ml">Índice</div></div></div><div class="spk">${sparkHtml(S.prov,s.codigo)}</div><div class="sc-ft">${oppTag(s.opp)}<span class="sc-sz">${s.size}</span></div></div>`).join('')}</div>
+    <div class="sh"><div class="st"><em>03</em> MATRIZ COMPLETA</div></div>
+    <div class="tbl-wrap"><table><thead><tr><th>Actividad</th><th>Cód.</th><th>Sz.</th><th>Var.A</th><th>Var.M</th><th>Idx</th><th>Acción</th></tr></thead><tbody>${all.sort((a,b)=>b.varA-a.varA).map(s=>`<tr><td>${s.nombre}</td><td style="color:var(--muted)">${s.codigo}</td><td style="color:var(--muted)">${s.size}</td><td class="${vc(s.varA)}">${vs(s.varA)}${s.varA.toFixed(1)}%</td><td class="${vc(s.varM)}">${vs(s.varM)}${s.varM.toFixed(1)}%</td><td class="info">${s.indice}</td><td>${oppTag(s.opp)}</td></tr>`).join('')}</tbody></table></div>`;
 }
 
-// ════════════════════════════════════════════════════
-// RENDER RIESGO
-// ════════════════════════════════════════════════════
-function renderRiesgo() {
-  const data = RIESGO_DATA[S.prov] || [];
-  const niveles = {bajo:'bajo',medio:'medio',alto:'alto',critico:'critico'};
-  document.getElementById('riesgoContent').innerHTML = `
-    <div class="sec-hdr"><div class="sec-title"><em>RIESGO CREDITICIO</em> · ${FALLBACK[S.prov].provincia.toUpperCase()} · ANÁLISIS POR SECTOR</div></div>
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
-      ${['bajo','medio','alto','critico'].map(n=>{
-        const count=data.filter(d=>d.nivel===n).length;
-        const colors={bajo:'green',medio:'yellow',alto:'red',critico:'purple'};
-        const labels={bajo:'BAJO RIESGO',medio:'RIESGO MEDIO',alto:'ALTO RIESGO',critico:'CRÍTICO'};
-        return `<div class="mc ${n==='bajo'?'externo':n==='medio'?'tasa':n==='alto'?'inflacion':'riesgo'}">
-          <div class="mc-top"><span class="mc-tag ${colors[n]}">${labels[n]}</span></div>
-          <div class="mc-val" style="color:var(--${colors[n]})">${count}</div>
-          <div class="mc-lbl">sectores</div>
-        </div>`;}).join('')}
-    </div>
-    <div class="riesgo-grid">
-      ${data.map(r=>`
-        <div class="rc ${r.nivel}">
-          <div class="rc-top">
-            <div class="rc-nombre">${r.nombre}</div>
-            <div class="rc-nivel ${r.nivel}">${{bajo:'✓ BAJO',medio:'◆ MEDIO',alto:'⚠ ALTO',critico:'✖ CRÍTICO'}[r.nivel]}</div>
-          </div>
-          <div class="rc-metrics">
-            <div>
-              <div class="rc-m-val ${r.mora>5?'neg':r.mora>3?'neu':'pos'}">${r.mora}%</div>
-              <div class="rc-m-lbl">Mora est.</div>
-            </div>
-            <div>
-              <div class="rc-m-val ${r.cobrabilidad>90?'pos':r.cobrabilidad>80?'neu':'neg'}">${r.cobrabilidad}%</div>
-              <div class="rc-m-lbl">Cobrabilidad</div>
-            </div>
-            <div>
-              <div class="rc-m-val ${r.varCartera>0?'pos':'neg'}">${r.varCartera>0?'+':''}${r.varCartera}%</div>
-              <div class="rc-m-lbl">Var. Cartera</div>
-            </div>
-          </div>
-          <div class="rc-drivers">${r.drivers}<br><strong>Acción: ${r.accion}</strong></div>
-        </div>`).join('')}
-    </div>`;
+function renderRiesgo(){
+  const data=RIESGO[S.prov]||[];
+  const lm={bajo:'✓ BAJO',medio:'◆ MEDIO',alto:'⚠ ALTO',critico:'✖ CRÍTICO'};
+  const cm={bajo:'green',medio:'yellow',alto:'red',critico:'purple'};
+  $('riesgoContent').innerHTML=`
+    <div class="sh"><div class="st"><em>RIESGO CREDITICIO</em> · ${FB[S.prov].provincia.toUpperCase()}</div></div>
+    <div class="g4" style="margin-bottom:12px">${['bajo','medio','alto','critico'].map(n=>{const cnt=data.filter(d=>d.nivel===n).length;return`<div class="card card-stripe stripe-${cm[n]}"><div class="card-top"><span class="tag tag-${cm[n]}">${n.toUpperCase()}</span></div><div class="card-val" style="color:var(--${cm[n]})">${cnt}</div><div class="card-lbl">sectores</div></div>`;}).join('')}</div>
+    <div class="g-risk">${data.map(r=>`<div class="rc ${r.nivel}"><div class="rc-top"><div class="rc-name">${r.nombre}</div><div class="rc-niv ${r.nivel}">${lm[r.nivel]}</div></div><div class="rc-m"><div><div class="rc-mv ${r.mora>5?'neg':r.mora>3?'neu':'pos'}">${r.mora}%</div><div class="rc-ml">Mora</div></div><div><div class="rc-mv ${r.cobr>90?'pos':r.cobr>80?'neu':'neg'}">${r.cobr}%</div><div class="rc-ml">Cobr.</div></div><div><div class="rc-mv ${r.varC>0?'pos':'neg'}">${r.varC>0?'+':''}${r.varC}%</div><div class="rc-ml">Cartera</div></div></div><div class="rc-d">${r.d}<br><strong>→ ${r.a}</strong></div></div>`).join('')}</div>`;
 }
 
-// ════════════════════════════════════════════════════
-// NOTICIAS
-// ════════════════════════════════════════════════════
-function renderNoticias() {
-  let items = [...S.noticias];
-  if(S.newsFilter==='alertas') items=items.filter(n=>n.alerta_temprana);
-  else if(S.newsFilter==='positivo') items=items.filter(n=>n.sentimiento==='positivo');
-  else if(S.newsFilter==='prov') items=items.filter(n=>(n.provincias||[]).includes(S.prov));
-  document.getElementById('newsCount').textContent = items.length;
-  if(!items.length){
-    document.getElementById('newsList').innerHTML='<div class="news-empty">Sin noticias para el filtro seleccionado.<br><br>Conectá el backend Render para ver noticias en vivo.</div>';
-    return;
-  }
-  document.getElementById('newsList').innerHTML=items.slice(0,30).map(n=>{
-    const cls=n.alerta_temprana?'alerta':n.sentimiento==='positivo'?'pos-card':'';
+function renderNoticias(){
+  let items=[...S.noticias];
+  if(S.newsFilter==='alertas')items=items.filter(n=>n.alerta_temprana);
+  else if(S.newsFilter==='positivo')items=items.filter(n=>n.sentimiento==='positivo');
+  else if(S.newsFilter==='prov')items=items.filter(n=>(n.provincias||[]).includes(S.prov));
+  $('newsCount').textContent=items.length;
+  if(!items.length){$('newsList').innerHTML='<div class="news-empty">Sin noticias para este filtro.<br>Conectá el backend para noticias IA.</div>';return;}
+  $('newsList').innerHTML=items.slice(0,30).map(n=>{
+    const cls=n.alerta_temprana?'alerta':n.sentimiento==='positivo'?'pcard':'';
     const fecha=n.fecha?new Date(n.fecha).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'}):'';
-    return`<div class="news-card ${cls}" onclick="window.open('${n.link}','_blank')">
-      <div class="nc-top"><div class="nc-titulo">${n.titulo}</div><div class="nc-sent ${n.sentimiento}"></div></div>
-      ${n.resumen_corto?`<div class="nc-resumen">${n.resumen_corto}</div>`:''}
-      <div class="nc-footer">
-        <span class="nc-sector">${n.sector}</span>
-        ${(n.provincias||[]).map(p=>`<span class="nc-prov">${p}</span>`).join('')}
-        ${n.alerta_temprana?'<span class="nc-alerta">⚠ ALERTA</span>':''}
-        <span class="nc-fuente">${n.fuente}</span>
-        <span style="margin-left:auto;font-size:9px;color:var(--muted)">${fecha}</span>
-      </div>
-    </div>`;}).join('');
+    return`<div class="nc ${cls}" onclick="window.open('${n.link}','_blank')"><div class="nc-top"><div class="nc-tit">${n.titulo}</div><div class="nc-dot ${n.sentimiento}"></div></div>${n.resumen_corto?`<div class="nc-res">${n.resumen_corto}</div>`:''}<div class="nc-ft"><span class="nc-sec">${n.sector}</span>${(n.provincias||[]).map(p=>`<span class="nc-pv">${p}</span>`).join('')}${n.alerta_temprana?'<span style="font-family:DM Mono,monospace;font-size:7px;background:rgba(239,68,68,.15);padding:1px 3px;border-radius:2px;color:var(--red)">⚠</span>':''}<span style="margin-left:auto;font-family:DM Mono,monospace;font-size:8px;color:var(--muted)">${n.fuente} · ${fecha}</span></div></div>`;}).join('');
 }
 
-function filterNews(f){
-  S.newsFilter=f;
-  ['Todas','Alertas','Positivo','Prov'].forEach(x=>{
-    const el=document.getElementById(`nf${x}`);
-    if(el) el.classList.toggle('active', x.toLowerCase()===f);
-  });
-  renderNoticias();
-}
+function filterNews(f){S.newsFilter=f;document.querySelectorAll('.nfc').forEach(c=>c.classList.remove('active'));const m={todas:'nfT',alertas:'nfA',positivo:'nfP',prov:'nfPv'};if(m[f])$(m[f]).classList.add('active');renderNoticias();}
+function setTab(t){S.tab=t;document.querySelectorAll('.tab-btn').forEach((b,i)=>{b.classList.toggle('active',['actividad','macro','mora','riesgo','externo'][i]===t);});document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));$(`tab-${t}`).classList.add('active');if(t==='riesgo')renderRiesgo();if(t==='externo')fetchAllCommodities();}
+function setProv(p){S.prov=p;['SF','ER','SJ','SC'].forEach(x=>$(`pb${x}`).classList.toggle('active',x===p));$('filterOpp').value='todas';$('filterSize').value='todas';S.opp='todas';S.size='todas';renderActividad();if(S.tab==='riesgo')renderRiesgo();}
+function applyFilters(){S.opp=$('filterOpp').value;S.size=$('filterSize').value;renderActividad();}
+function setChip(o){S.opp=o;$('filterOpp').value=o;renderActividad();}
+function setPeriod(p){S.period=p;renderActividad();}
+function initTheme(){const saved=localStorage.getItem('eco-theme');if(saved)document.documentElement.className=saved;updateThemeBtn();}
+function toggleTheme(){const isDark=document.documentElement.classList.contains('dark')||(!document.documentElement.classList.contains('light')&&window.matchMedia('(prefers-color-scheme:dark)').matches);const next=isDark?'light':'dark';document.documentElement.className=next;localStorage.setItem('eco-theme',next);updateThemeBtn();}
+function updateThemeBtn(){const isDark=document.documentElement.classList.contains('dark')||(!document.documentElement.classList.contains('light')&&window.matchMedia('(prefers-color-scheme:dark)').matches);$('themeBtn').textContent=isDark?'☀️':'🌙';}
 
-// ════════════════════════════════════════════════════
-// CONTROLS
-// ════════════════════════════════════════════════════
-function setTab(t){
-  S.tab=t;
-  document.querySelectorAll('.tab-btn').forEach((b,i)=>{
-    const tabs=['actividad','macro','riesgo','externo'];
-    b.classList.toggle('active',tabs[i]===t);
-  });
-  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
-  document.getElementById(`tab-${t}`).classList.add('active');
-  if(t==='riesgo') renderRiesgo();
-  if(t==='macro' && S.indicadores?.dolar) updateMacro(S.indicadores);
-}
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;if(!localStorage.getItem('install-dismissed'))$('installBanner').classList.add('visible');});
+$('installBtn').addEventListener('click',async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;$('installBanner').classList.remove('visible');});
+function closeInstall(){$('installBanner').classList.remove('visible');localStorage.setItem('install-dismissed','1');}
+if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 
-function setProv(p){
-  S.prov=p;
-  ['SF','ER','SJ','SC'].forEach(x=>document.getElementById(`pb${x}`).classList.toggle('active',x===p));
-  document.getElementById('filterOpp').value='todas';
-  document.getElementById('filterSize').value='todas';
-  S.opp='todas'; S.size='todas';
-  renderActividad();
-  if(S.tab==='riesgo') renderRiesgo();
-}
-
-function applyFilters(){
-  S.opp=document.getElementById('filterOpp').value;
-  S.size=document.getElementById('filterSize').value;
-  renderActividad();
-}
-
-function setChip(o){ S.opp=o; document.getElementById('filterOpp').value=o; renderActividad(); }
-function setPeriod(p){ S.period=p; renderActividad(); }
-
-// ════════════════════════════════════════════════════
-// INIT
-// ════════════════════════════════════════════════════
-buildDefaultTicker();
+initTheme();
 renderActividad();
 refreshAll();
-setInterval(refreshAll, 15*60*1000);
+setInterval(refreshAll,15*60*1000);
+setInterval(fetchAllCommodities,5*60*1000);
 </script>
 </body>
 </html>
