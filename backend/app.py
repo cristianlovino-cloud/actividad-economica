@@ -222,6 +222,8 @@ def get_indicadores():
     bcra_ids = {
         "inflacion_mensual": 27,
         "tasa_politica":     6,
+        "badlar":            7,
+        "tm20":              8,
         "reservas_bn":       1,
         "base_monetaria":    15,
     }
