@@ -325,10 +325,10 @@ tbody tr:hover td{background:var(--s2)}
   </tbody></table></div>
   <div class="sh"><div class="st"><em>03</em> TCE POR SECTOR EXPORTADOR</div></div>
   <div class="g4">
-    <div class="card card-stripe stripe-green"><div class="card-top"><span class="card-ico">🌾</span><span class="tag tag-green">AGRO</span></div><div class="card-val pos">~$850</div><div class="card-lbl">TCE agropecuario</div><div class="card-sub">Retención soja: 33%</div></div>
-    <div class="card card-stripe stripe-green"><div class="card-top"><span class="card-ico">🛢</span><span class="tag tag-green">HIDRO</span></div><div class="card-val pos">~$1,020</div><div class="card-lbl">TCE hidrocarburos</div><div class="card-sub">Retención: 8%</div></div>
-    <div class="card card-stripe stripe-green"><div class="card-top"><span class="card-ico">🥇</span><span class="tag tag-green">MINERÍA</span></div><div class="card-val pos">~$1,010</div><div class="card-lbl">TCE minería</div><div class="card-sub">Retención: 5-12%</div></div>
-    <div class="card card-stripe stripe-green"><div class="card-top"><span class="card-ico">💻</span><span class="tag tag-green">SOFTWARE</span></div><div class="card-val pos">~$1,050</div><div class="card-lbl">TCE conocimiento</div><div class="card-sub">Sin retenciones</div></div>
+    <div class="card card-stripe stripe-green"><div class="card-top"><span class="card-ico">🌾</span><span class="tag tag-green">AGRO</span></div><div class="card-val pos" id="tceAgro">calculando...</div><div class="card-lbl">TCE agropecuario (soja)</div><div class="card-sub">Ret. 33% · sobre oficial</div></div>
+    <div class="card card-stripe stripe-green"><div class="card-top"><span class="card-ico">🛢</span><span class="tag tag-green">HIDRO</span></div><div class="card-val pos" id="tceHidro">calculando...</div><div class="card-lbl">TCE hidrocarburos</div><div class="card-sub">Ret. 8% · sobre oficial</div></div>
+    <div class="card card-stripe stripe-green"><div class="card-top"><span class="card-ico">🥇</span><span class="tag tag-green">MINERÍA</span></div><div class="card-val pos" id="tceMineria">calculando...</div><div class="card-lbl">TCE minería</div><div class="card-sub">Ret. 8.5% prom · sobre oficial</div></div>
+    <div class="card card-stripe stripe-green"><div class="card-top"><span class="card-ico">💻</span><span class="tag tag-green">SOFTWARE</span></div><div class="card-val pos" id="tceSoftware">calculando...</div><div class="card-lbl">TCE conocimiento</div><div class="card-sub">Sin retenciones · MEP</div></div>
   </div>
 </div>
 
@@ -392,7 +392,24 @@ async function fetchAllCommodities(){
   updateTickerFromDOM();
 }
 
-// BCRA
+// BCRA + Dolar via backend (sin CORS)
+async function fetchIndicadores(){
+  const d=await safeGet(`${API_BASE}/api/indicadores`,15000);
+  if(!d)return{dolar:null,bcra:null};
+  // normalizar dolar al formato que espera updateMacroUI
+  const dolar={};
+  for(const[k,v]of Object.entries(d.dolar||{})){dolar[k]={compra:v.compra,venta:v.venta};}
+  const b=d.bcra||{};
+  const bcra={
+    infl:  b.inflacion_mensual,
+    tasa:  b.tasa_politica,
+    badlar:b.badlar,
+    tm20:  b.tm20,
+    res:   b.reservas_bn
+  };
+  return{dolar,bcra};
+}
+// Fallback directo si backend no responde
 async function fetchBCRA(){
   const f=async id=>{const d=await safeGet(`https://api.bcra.gob.ar/estadisticas/v2.0/datosvariable/${id}/1/1`);return d?.results?.[0]?.valor??null;};
   const[infl,tasa,badlar,tm20,res]=await Promise.all([f(27),f(6),f(7),f(8),f(1)]);
@@ -439,9 +456,18 @@ function updateTickerFromDOM(){
 
 async function refreshAll(){
   $('lastUpdate')&&($('lastUpdate').textContent="actualizando...");
-  const[dolar,bcra,nots,sects]=await Promise.all([fetchDolar(),fetchBCRA(),safeGet(`${API_BASE}/api/noticias`),safeGet(`${API_BASE}/api/sectores/${S.prov}`)]);
+  // Intentar backend primero (sin CORS), fallback a directo
+  const[indResult,nots,sects]=await Promise.all([
+    fetchIndicadores(),
+    safeGet(`${API_BASE}/api/noticias`),
+    safeGet(`${API_BASE}/api/sectores/${S.prov}`)
+  ]);
+  let{dolar,bcra}=indResult;
+  // Fallback directo si backend no tiene los datos
+  if(!dolar){dolar=await fetchDolar();}
+  if(!bcra?.tasa){const b=await fetchBCRA();if(b?.tasa)bcra=b;}
   S._dolar=dolar;S._bcra=bcra;
-  if(dolar||bcra)updateMacroUI(dolar,bcra);
+  if(dolar||bcra){updateMacroUI(dolar,bcra);updateTCE(dolar);}
   if(nots){S.noticias=nots.items||[];renderNoticias();}
   if(sects)S.sectoresData[S.prov]=sects;
   renderActividad();
@@ -528,6 +554,17 @@ $('installBtn').addEventListener('click',async()=>{if(!deferredPrompt)return;def
 function closeInstall(){$('installBanner').classList.remove('visible');localStorage.setItem('install-dismissed','1');}
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 
+function updateTCE(dolar){
+  if(!dolar)return;
+  const of=dolar.oficial?.venta||dolar.bolsa?.venta;
+  const mep=dolar.bolsa?.venta;
+  if(!of)return;
+  const fmt2=n=>`$${Math.round(n).toLocaleString('es-AR')}`;
+  if($('tceAgro'))    $('tceAgro').textContent    = fmt2(of*(1-0.33));  // soja 33%
+  if($('tceHidro'))   $('tceHidro').textContent   = fmt2(of*(1-0.08));  // hidro 8%
+  if($('tceMineria')) $('tceMineria').textContent = fmt2(of*(1-0.085)); // minería 8.5%
+  if($('tceSoftware'))$('tceSoftware').textContent= mep ? fmt2(mep) : fmt2(of); // software cobra a MEP
+}
 initTheme();
 renderActividad();
 refreshAll();
