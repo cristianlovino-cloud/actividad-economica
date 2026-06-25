@@ -238,7 +238,7 @@ tbody tr:hover td{background:var(--s2)}
     <div class="sb-lbl" style="margin-top:4px">Filtros</div>
     <div class="f-row"><div class="f-lbl">Oportunidad</div><select class="f-sel" id="filterOpp" onchange="applyFilters()"><option value="todas">Todas</option><option value="crecer">▲ Crecer</option><option value="salir">▼ Salir</option><option value="defender">◆ Defender</option><option value="observar">○ Observar</option></select></div>
     <div class="f-row"><div class="f-lbl">Tamaño SEPyME</div><select class="f-sel" id="filterSize" onchange="applyFilters()"><option value="todas">Todas</option><option value="micro">Micro</option><option value="pequena">Pequeña</option><option value="mediana">Mediana</option></select></div>
-    <br><div style="font-size:9px;color:var(--muted);line-height:1.8;padding:0 2px">BCRA · DolarAPI · Yahoo Finance<br>INDEC · IERAL · Agrofy<br><span style="color:var(--border2)" id="lastUpdate">—</span></div>
+    <br><div style="font-size:9px;color:var(--muted);line-height:1.8;padding:0 2px">BCRA · DolarAPI · Yahoo Finance<br>INDEC · IERAL · Agrofy<br><span style="color:var(--border2)" id="lastUpdate">—</span><br><span id="connStatus" style="font-family:DM Mono,monospace;font-size:8px">○ iniciando</span></div>
   </div>
 </aside>
 <main class="main">
@@ -345,158 +345,362 @@ tbody tr:hover td{background:var(--s2)}
 </aside>
 </div>
 <script>
-const API_BASE="https://actividad-economica.onrender.com";
-const S={prov:"SF",opp:"todas",size:"todas",period:"anual",newsFilter:"todas",tab:"actividad",sectoresData:{},noticias:[],indicadores:{}};
-const $=id=>document.getElementById(id);
-const fmt=n=>Number(n).toLocaleString('es-AR');
-const fmtUSD=n=>`$${Number(n).toLocaleString('en-US',{maximumFractionDigits:2})}`;
-const vc=v=>v>1?'pos':v<-0.5?'neg':'neu';
-const vs=v=>v>0?'+':'';
-const tna2tea=tna=>((1+tna/100/365)**365-1)*100;
-async function safeGet(url,timeout=8000){try{const r=await fetch(url,{signal:AbortSignal.timeout(timeout)});if(!r.ok)throw 0;return await r.json();}catch{return null;}}
+// ─── CONFIG ────────────────────────────────────────────────────────────────
+const API_BASE = "https://actividad-economica.onrender.com";
 
-// COMMODITIES — Yahoo Finance via allorigins proxy
-async function fetchCommodity(sym){
-  const url=`https://api.allorigins.win/raw?url=${encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=5d`)}`;
-  const d=await safeGet(url,12000);
-  if(!d?.chart?.result?.[0])return null;
-  const meta=d.chart.result[0].meta;
-  const price=meta.regularMarketPrice;
-  const prev=meta.chartPreviousClose||meta.previousClose;
-  return{price,chg:prev?((price-prev)/prev*100):null};
+// Estado global
+const S = {
+  prov:"SF", opp:"todas", size:"todas", period:"anual",
+  newsFilter:"todas", tab:"actividad",
+  sectoresData:{}, noticias:[], indicadores:{},
+  _dolar:null, _bcra:null,
+  _backendOk: null,   // null=no probado, true/false
+  _refreshing: false
+};
+
+const $ = id => document.getElementById(id);
+const fmt = n => Number(n).toLocaleString('es-AR');
+const fmtUSD = n => `$${Number(n).toLocaleString('en-US',{maximumFractionDigits:2})}`;
+const vc = v => v>1?'pos':v<-0.5?'neg':'neu';
+const vs = v => v>0?'+':'';
+const tna2tea = tna => ((1+tna/100/365)**365-1)*100;
+
+// ─── FETCH HELPERS ──────────────────────────────────────────────────────────
+async function safeGet(url, timeout=9000) {
+  try {
+    const r = await fetch(url, {signal: AbortSignal.timeout(timeout)});
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    return await r.json();
+  } catch(e) {
+    return null;
+  }
 }
 
-const COMM_MAP=[
-  {id:'cSoja',    sym:'ZS=F', fb:'$368/bu'},
-  {id:'cMaiz',    sym:'ZC=F', fb:'$162/bu'},
-  {id:'cTrigo',   sym:'ZW=F', fb:'$198/bu'},
-  {id:'cPetroleo',sym:'CL=F', fb:'$78/bbl'},
-  {id:'cOro',     sym:'GC=F', fb:'$3,180/oz'},
-  {id:'cLitio',   sym:'LCO=F',fb:'$12.4k/t'},
+// Estado visual de conexión
+function setStatus(state, msg) {
+  // state: 'loading' | 'ok' | 'warn' | 'offline'
+  const colors = {loading:'var(--muted)', ok:'var(--green)', warn:'var(--yellow)', offline:'var(--red)'};
+  const dots = {loading:'⟳', ok:'●', warn:'◆', offline:'✖'};
+  const el = $('connStatus');
+  if (!el) return;
+  el.textContent = `${dots[state]} ${msg}`;
+  el.style.color = colors[state];
+}
+
+// Warm-up ping al backend (Render duerme en free tier)
+async function pingBackend() {
+  setStatus('loading', 'conectando...');
+  const start = Date.now();
+  const ok = await safeGet(`${API_BASE}/api/ping`, 30000);
+  const ms = Date.now() - start;
+  if (ok !== null || ms < 25000) {
+    S._backendOk = true;
+    setStatus('ok', `backend ${ms}ms`);
+  } else {
+    S._backendOk = false;
+    setStatus('warn', 'modo offline');
+  }
+  return S._backendOk;
+}
+
+// ─── COMMODITIES ────────────────────────────────────────────────────────────
+// Multi-proxy con fallback: allorigins → corsproxy.io → sin conexión
+async function fetchCommodity(sym) {
+  const yf = `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=5d`;
+  const proxies = [
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(yf)}`,
+    `https://corsproxy.io/?${encodeURIComponent(yf)}`
+  ];
+  for (const url of proxies) {
+    const d = await safeGet(url, 10000);
+    if (d?.chart?.result?.[0]) {
+      const meta = d.chart.result[0].meta;
+      const price = meta.regularMarketPrice;
+      const prev = meta.chartPreviousClose || meta.previousClose;
+      return { price, chg: prev ? ((price-prev)/prev*100) : null };
+    }
+  }
+  return null;
+}
+
+// FIX: símbolo Litio corregido → usar ETF de litio (LTHM) como proxy de precio
+// LCO=F no existe en Yahoo. Alternativa: precio spot referencial vía LTHM o fallback fijo actualizado.
+const COMM_MAP = [
+  {id:'cSoja',     sym:'ZS=F',  name:'SOJA',   fb:'$370/bu',  unit:'bu'},
+  {id:'cMaiz',     sym:'ZC=F',  name:'MAÍZ',   fb:'$165/bu',  unit:'bu'},
+  {id:'cTrigo',    sym:'ZW=F',  name:'TRIGO',  fb:'$200/bu',  unit:'bu'},
+  {id:'cPetroleo', sym:'CL=F',  name:'WTI',    fb:'$76/bbl',  unit:'bbl'},
+  {id:'cOro',      sym:'GC=F',  name:'ORO',    fb:'$3,220/oz',unit:'oz'},
+  // Litio: sin futuro liquido en YF → usamos precio referencial LTHM (ETF) como proxy
+  {id:'cLitio',    sym:'LTHM',  name:'LITIO',  fb:'$12.1k/t', unit:'ETF', isProxy:true},
 ];
 
-async function fetchAllCommodities(){
-  const ts=new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
-  const results=await Promise.allSettled(COMM_MAP.map(c=>fetchCommodity(c.sym)));
-  $('commTs')&&($('commTs').textContent=`actualizado ${ts}`);
-  results.forEach((res,i)=>{
-    const cfg=COMM_MAP[i];const card=$(cfg.id);if(!card)return;
-    const valEl=card.querySelector('.comm-val');const varEl=card.querySelector('.comm-var');
+async function fetchAllCommodities() {
+  const ts = new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+  const results = await Promise.allSettled(COMM_MAP.map(c => fetchCommodity(c.sym)));
+  if ($('commTs')) $('commTs').textContent = `actualizado ${ts}`;
+  let anyLive = false;
+  results.forEach((res, i) => {
+    const cfg = COMM_MAP[i];
+    const card = $(cfg.id);
+    if (!card) return;
+    const valEl = card.querySelector('.comm-val');
+    const varEl = card.querySelector('.comm-var');
     valEl.classList.remove('comm-loading');
-    if(res.status==='fulfilled'&&res.value){
-      const{price,chg}=res.value;
-      valEl.textContent=fmtUSD(price);
-      if(chg!==null){const sign=chg>0?'+':'';varEl.textContent=`${sign}${chg.toFixed(2)}% hoy`;varEl.className=`comm-var ${vc(chg)}`;}
-    } else{valEl.textContent=cfg.fb;varEl.textContent='sin conexión';varEl.className='comm-var neu';}
+    if (res.status === 'fulfilled' && res.value) {
+      const {price, chg} = res.value;
+      valEl.textContent = cfg.isProxy ? `~$${price.toFixed(2)}` : fmtUSD(price);
+      if (chg !== null) {
+        const sign = chg > 0 ? '+' : '';
+        varEl.textContent = `${sign}${chg.toFixed(2)}%${cfg.isProxy ? ' proxy' : ''}`;
+        varEl.className = `comm-var ${vc(chg)}`;
+      }
+      anyLive = true;
+    } else {
+      valEl.textContent = cfg.fb;
+      varEl.textContent = 'referencial';
+      varEl.className = 'comm-var neu';
+    }
   });
   updateTickerFromDOM();
 }
 
-// BCRA + Dolar via backend (sin CORS)
-async function fetchIndicadores(){
-  const d=await safeGet(`${API_BASE}/api/indicadores`,15000);
-  if(!d)return{dolar:null,bcra:null};
-  // normalizar dolar al formato que espera updateMacroUI
-  const dolar={};
-  for(const[k,v]of Object.entries(d.dolar||{})){dolar[k]={compra:v.compra,venta:v.venta};}
-  const b=d.bcra||{};
-  const bcra={
-    infl:  b.inflacion_mensual,
-    tasa:  b.tasa_politica,
-    badlar:b.badlar,
-    tm20:  b.tm20,
-    res:   b.reservas_bn
+// ─── DÓLAR ──────────────────────────────────────────────────────────────────
+// FIX: DolarAPI devuelve item.casa como clave — el mapeo era correcto,
+// pero normalizamos explícitamente para evitar sorpresas de mayúsculas/espacios
+async function fetchDolarDirect() {
+  const d = await safeGet("https://dolarapi.com/v1/dolares", 8000);
+  if (!d || !Array.isArray(d)) return null;
+  const out = {};
+  for (const item of d) {
+    // Normalizar clave: "bolsa", "blue", "oficial", "contadoconliqui", "mayorista", "cripto", "tarjeta"
+    const k = (item.casa || '').toLowerCase().replace(/\s+/g,'');
+    out[k] = {compra: item.compra, venta: item.venta, nombre: item.nombre};
+  }
+  return out;
+}
+
+// ─── BCRA ───────────────────────────────────────────────────────────────────
+// FIX: BCRA API tiene CORS restringido en browser → usarlo solo si backend falla
+// En producción el backend Render debería proveer estos datos sin CORS
+async function fetchBCRADirect() {
+  const f = async id => {
+    const d = await safeGet(`https://api.bcra.gob.ar/estadisticas/v2.0/datosvariable/${id}/1/1`, 7000);
+    return d?.results?.[0]?.valor ?? null;
   };
-  return{dolar,bcra};
-}
-// Fallback directo si backend no responde
-async function fetchBCRA(){
-  const f=async id=>{const d=await safeGet(`https://api.bcra.gob.ar/estadisticas/v2.0/datosvariable/${id}/1/1`);return d?.results?.[0]?.valor??null;};
-  const[infl,tasa,badlar,tm20,res]=await Promise.all([f(27),f(6),f(7),f(8),f(1)]);
-  return{infl,tasa,badlar,tm20,res};
-}
-async function fetchDolar(){
-  const d=await safeGet("https://dolarapi.com/v1/dolares");if(!d)return null;
-  const out={};for(const item of d)out[item.casa]=item;return out;
-}
-
-function updateMacroUI(dolar,bcra){
-  if(dolar){
-    const mep=dolar.bolsa,ccl=dolar.contadoconliqui,blue=dolar.blue,of=dolar.oficial;
-    if(mep){$('mMep').textContent=`$${fmt(mep.venta)}`;$('mMepC').textContent=`compra: $${fmt(mep.compra)}`;}
-    if(ccl)$('mCcl').textContent=`$${fmt(ccl.venta)}`;
-    if(blue){$('mBlue').textContent=`$${fmt(blue.venta)}`;$('mBlueC').textContent=`compra: $${fmt(blue.compra)}`;}
-    if(of){$('mOfic').textContent=`$${fmt(of.venta)}`;$('mOficC').textContent=`compra: $${fmt(of.compra)}`;}
-    if(blue&&of){const br=((blue.venta/of.venta-1)*100).toFixed(1);$('mBrecha').textContent=`brecha: +${br}%`;$('mBrechaG').textContent=`+${br}%`;}
-  }
-  if(bcra){
-    if(bcra.infl)$('mInfl').textContent=`${bcra.infl}%`;
-    if(bcra.tasa){$('mTasaBcra').textContent=`${bcra.tasa}% TNA`;$('tPolitica').textContent=`${bcra.tasa}% TNA`;$('tPoliticaTEA').textContent=`TEA: ${tna2tea(bcra.tasa).toFixed(1)}%`;}
-    if(bcra.badlar){$('tBadlar').textContent=`${bcra.badlar}% TNA`;$('tBadlarTEA').textContent=`TEA: ${tna2tea(bcra.badlar).toFixed(1)}%`;const pf=(bcra.badlar*0.97).toFixed(1);$('tPF').textContent=`~${pf}% TNA`;$('tPFTEA').textContent=`TEA: ${tna2tea(pf).toFixed(1)}%`;$('tPyme').textContent=`~${(Number(bcra.badlar)+15).toFixed(0)}% TNA`;}
-    if(bcra.tm20){$('tTm20').textContent=`${bcra.tm20}% TNA`;$('tTm20TEA').textContent=`TEA: ${tna2tea(bcra.tm20).toFixed(1)}%`;}
-    if(bcra.res)$('mRes').textContent=`$${bcra.res}B`;
-  }
-  const ts=new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
-  $('macroTs')&&($('macroTs').textContent=`actualizado ${ts}`);
-}
-
-function updateTickerFromDOM(){
-  const dolar=S._dolar,bcra=S._bcra;
-  const items=[];
-  if(dolar?.blue)items.push({l:"BLUE",v:`$${fmt(dolar.blue.venta)}`,c:"neu"});
-  if(dolar?.bolsa)items.push({l:"MEP",v:`$${fmt(dolar.bolsa.venta)}`,c:"info"});
-  if(dolar?.oficial)items.push({l:"OFICIAL",v:`$${fmt(dolar.oficial.venta)}`,c:"info"});
-  if(bcra?.infl)items.push({l:"IPC",v:`${bcra.infl}%`,c:"neg"});
-  if(bcra?.tasa)items.push({l:"TASA",v:`${bcra.tasa}%`,c:"neu"});
-  COMM_MAP.forEach((cfg,i)=>{const el=$(cfg.id);if(!el)return;const v=el.querySelector('.comm-val')?.textContent;const names=["SOJA","MAÍZ","TRIGO","WTI","ORO","LITIO"];if(v&&v!=='—')items.push({l:names[i],v,c:"info"});});
-  if(!items.length)return;
-  const html=items.map(i=>`<div class="tick-item"><span class="tick-lbl">${i.l}</span>&nbsp;<span class="${i.c}">${i.v}</span></div>`).join('');
-  $('tkr').innerHTML=html+html;
-}
-
-async function refreshAll(){
-  $('lastUpdate')&&($('lastUpdate').textContent="actualizando...");
-  // Intentar backend primero (sin CORS), fallback a directo
-  const[indResult,nots,sects]=await Promise.all([
-    fetchIndicadores(),
-    safeGet(`${API_BASE}/api/noticias`),
-    safeGet(`${API_BASE}/api/sectores/${S.prov}`)
+  // Paralelo, pero muchos pueden fallar por CORS en browser — OK, es el último fallback
+  const [infl, tasa, badlar, tm20, res] = await Promise.all([
+    f(27), f(6), f(7), f(8), f(1)
   ]);
-  let{dolar,bcra}=indResult;
-  // Fallback directo si backend no tiene los datos
-  if(!dolar){dolar=await fetchDolar();}
-  if(!bcra?.tasa){const b=await fetchBCRA();if(b?.tasa)bcra=b;}
-  S._dolar=dolar;S._bcra=bcra;
-  if(dolar||bcra){updateMacroUI(dolar,bcra);updateTCE(dolar);}
-  if(nots){S.noticias=nots.items||[];renderNoticias();}
-  if(sects)S.sectoresData[S.prov]=sects;
-  renderActividad();
-  fetchAllCommodities();
-  const ts=new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
-  $('lastUpdate')&&($('lastUpdate').textContent=ts);
+  const got = [infl, tasa, badlar, tm20, res].filter(v => v !== null).length;
+  if (got === 0) return null; // CORS bloqueó todo
+  return {infl, tasa, badlar, tm20, res};
 }
 
-// DATA
+// ─── INDICADORES (con cascada de fuentes) ───────────────────────────────────
+async function fetchIndicadores() {
+  // 1) Intentar backend propio (sin CORS, puede tener caché)
+  const d = await safeGet(`${API_BASE}/api/indicadores`, 20000);
+  if (d) {
+    const dolar = {};
+    for (const [k,v] of Object.entries(d.dolar || {})) {
+      dolar[k.toLowerCase()] = {compra: v.compra, venta: v.venta};
+    }
+    const b = d.bcra || {};
+    const bcra = {
+      infl:  b.inflacion_mensual,
+      tasa:  b.tasa_politica,
+      badlar:b.badlar,
+      tm20:  b.tm20,
+      res:   b.reservas_bn
+    };
+    return {dolar, bcra, source:'backend'};
+  }
+  return {dolar: null, bcra: null, source:'none'};
+}
+
+// ─── MACRO UI ───────────────────────────────────────────────────────────────
+function updateMacroUI(dolar, bcra) {
+  if (dolar) {
+    const mep = dolar.bolsa;
+    const ccl = dolar.contadoconliqui;
+    const blue = dolar.blue;
+    const of  = dolar.oficial;
+    if (mep)  { $('mMep').textContent = `$${fmt(mep.venta)}`;  $('mMepC').textContent = `compra: $${fmt(mep.compra)}`; }
+    if (ccl)  { $('mCcl').textContent = `$${fmt(ccl.venta)}`; }
+    if (blue) { $('mBlue').textContent = `$${fmt(blue.venta)}`; $('mBlueC').textContent = `compra: $${fmt(blue.compra)}`; }
+    if (of)   { $('mOfic').textContent = `$${fmt(of.venta)}`;  $('mOficC').textContent = `compra: $${fmt(of.compra)}`; }
+    if (blue && of) {
+      const br = ((blue.venta / of.venta - 1) * 100).toFixed(1);
+      $('mBrecha').textContent  = `brecha: +${br}%`;
+      $('mBrechaG').textContent = `+${br}%`;
+    }
+  }
+  if (bcra) {
+    if (bcra.infl) $('mInfl').textContent = `${bcra.infl}%`;
+    if (bcra.tasa) {
+      $('mTasaBcra').textContent    = `${bcra.tasa}% TNA`;
+      $('tPolitica').textContent    = `${bcra.tasa}% TNA`;
+      $('tPoliticaTEA').textContent = `TEA: ${tna2tea(bcra.tasa).toFixed(1)}%`;
+    }
+    if (bcra.badlar) {
+      $('tBadlar').textContent    = `${bcra.badlar}% TNA`;
+      $('tBadlarTEA').textContent = `TEA: ${tna2tea(bcra.badlar).toFixed(1)}%`;
+      const pf = (bcra.badlar * 0.97).toFixed(1);
+      $('tPF').textContent        = `~${pf}% TNA`;
+      $('tPFTEA').textContent     = `TEA: ${tna2tea(pf).toFixed(1)}%`;
+      // Tasa PyME: BADLAR + spread ~15pp
+      const pymeTna = (Number(bcra.badlar) + 15).toFixed(0);
+      $('tPyme').textContent = `~${pymeTna}% TNA`;
+      // Spread PyME
+      if ($('spreadPyme')) $('spreadPyme').textContent = `~+15pp`;
+    }
+    if (bcra.tm20) {
+      $('tTm20').textContent    = `${bcra.tm20}% TNA`;
+      $('tTm20TEA').textContent = `TEA: ${tna2tea(bcra.tm20).toFixed(1)}%`;
+    }
+    if (bcra.res) $('mRes').textContent = `$${bcra.res}B`;
+    // Inflación acumulada 12m (si backend la tiene)
+    if (bcra.infl_anual) $('mInflA').textContent = `acum. 12m: ${bcra.infl_anual}%`;
+  }
+  const ts = new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+  if ($('macroTs')) $('macroTs').textContent = `actualizado ${ts}`;
+}
+
+// ─── TCE ────────────────────────────────────────────────────────────────────
+function updateTCE(dolar) {
+  if (!dolar) return;
+  const of  = dolar.oficial?.venta;
+  const mep = dolar.bolsa?.venta;
+  if (!of) return;
+  const fmt2 = n => `$${Math.round(n).toLocaleString('es-AR')}`;
+  if ($('tceAgro'))     $('tceAgro').textContent     = fmt2(of * (1-0.33));   // soja 33%
+  if ($('tceHidro'))    $('tceHidro').textContent    = fmt2(of * (1-0.08));   // hidro 8%
+  if ($('tceMineria'))  $('tceMineria').textContent  = fmt2(of * (1-0.085));  // minería 8.5%
+  if ($('tceSoftware')) $('tceSoftware').textContent = mep ? fmt2(mep) : fmt2(of); // software MEP
+}
+
+// ─── TICKER ─────────────────────────────────────────────────────────────────
+function updateTickerFromDOM() {
+  const dolar = S._dolar, bcra = S._bcra;
+  const items = [];
+  if (dolar?.blue)             items.push({l:"BLUE",    v:`$${fmt(dolar.blue.venta)}`,    c:"neu"});
+  if (dolar?.bolsa)            items.push({l:"MEP",     v:`$${fmt(dolar.bolsa.venta)}`,   c:"info"});
+  if (dolar?.contadoconliqui)  items.push({l:"CCL",     v:`$${fmt(dolar.contadoconliqui.venta)}`, c:"info"});
+  if (dolar?.oficial)          items.push({l:"OFICIAL", v:`$${fmt(dolar.oficial.venta)}`, c:"info"});
+  if (bcra?.infl)              items.push({l:"IPC",     v:`${bcra.infl}%`,                c:"neg"});
+  if (bcra?.tasa)              items.push({l:"TASA",    v:`${bcra.tasa}%`,                c:"neu"});
+  if (bcra?.badlar)            items.push({l:"BADLAR",  v:`${bcra.badlar}%`,              c:"neu"});
+  COMM_MAP.forEach((cfg, i) => {
+    const el = $(cfg.id);
+    if (!el) return;
+    const v = el.querySelector('.comm-val')?.textContent;
+    if (v && v !== '—') items.push({l:cfg.name, v, c:"info"});
+  });
+  if (!items.length) return;
+  const html = items.map(i => `<div class="tick-item"><span class="tick-lbl">${i.l}</span>&nbsp;<span class="${i.c}">${i.v}</span></div>`).join('');
+  $('tkr').innerHTML = html + html; // duplicar para loop continuo
+}
+
+// ─── REFRESH PRINCIPAL ──────────────────────────────────────────────────────
+async function refreshAll() {
+  if (S._refreshing) return;
+  S._refreshing = true;
+  if ($('lastUpdate')) $('lastUpdate').textContent = "actualizando...";
+  setStatus('loading', 'cargando...');
+
+  try {
+    // 1) Todas las llamadas en paralelo
+    const [indResult, nots, sects] = await Promise.all([
+      fetchIndicadores(),
+      safeGet(`${API_BASE}/api/noticias`, 20000),
+      safeGet(`${API_BASE}/api/sectores/${S.prov}`, 15000)
+    ]);
+
+    let {dolar, bcra, source} = indResult;
+
+    // 2) Fallbacks si el backend no respondió
+    if (!dolar) {
+      dolar = await fetchDolarDirect();
+      if (dolar) setStatus('warn', 'dólar: DolarAPI directo');
+    }
+    if (!bcra?.tasa) {
+      const b = await fetchBCRADirect();
+      if (b?.tasa) {
+        bcra = b;
+        setStatus('warn', 'BCRA: directo (puede fallar CORS)');
+      }
+    }
+
+    // 3) Guardar y actualizar UI
+    S._dolar = dolar;
+    S._bcra  = bcra;
+
+    if (dolar || bcra) {
+      updateMacroUI(dolar, bcra);
+      updateTCE(dolar);
+    }
+    if (nots)  { S.noticias = nots.items || []; renderNoticias(); }
+    if (sects) { S.sectoresData[S.prov] = sects; }
+
+    renderActividad();
+    fetchAllCommodities(); // no bloquear el refresh principal
+
+    const ts = new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+    if ($('lastUpdate')) $('lastUpdate').textContent = ts;
+
+    if (dolar || bcra) {
+      setStatus('ok', `ok ${ts}`);
+    } else {
+      setStatus('warn', 'sin datos live · modo local');
+    }
+
+  } catch(e) {
+    setStatus('offline', 'error de red');
+    console.error('refreshAll error:', e);
+  } finally {
+    S._refreshing = false;
+  }
+}
+
+// ─── DATOS LOCALES (fallback) ────────────────────────────────────────────────
 const FB={SF:{provincia:"Santa Fe",var_anual:4.2,var_mensual:0.8,sectores:[{codigo:"A011",nombre:"Agricultura – Cereales y Oleaginosas",varA:6.1,varM:1.2,indice:88,opp:"crecer",size:"mediana"},{codigo:"C261",nombre:"Maquinaria Agrícola",varA:8.4,varM:2.1,indice:95,opp:"crecer",size:"mediana"},{codigo:"C101",nombre:"Frigoríficos y Alimentos",varA:5.8,varM:1.5,indice:92,opp:"crecer",size:"mediana"},{codigo:"J620",nombre:"Servicios Tecnológicos",varA:11.2,varM:2.8,indice:43,opp:"crecer",size:"pequena"},{codigo:"G461",nombre:"Comercio Mayorista Agro",varA:4.7,varM:0.9,indice:78,opp:"crecer",size:"pequena"},{codigo:"C241",nombre:"Metalmecánica",varA:3.1,varM:0.6,indice:71,opp:"defender",size:"mediana"},{codigo:"A012",nombre:"Horticultura",varA:2.4,varM:0.3,indice:45,opp:"defender",size:"pequena"},{codigo:"H491",nombre:"Transporte de Cargas",varA:0.9,varM:0.2,indice:62,opp:"observar",size:"pequena"},{codigo:"I551",nombre:"Hotelería y Gastronomía",varA:1.2,varM:0.3,indice:38,opp:"observar",size:"micro"},{codigo:"G471",nombre:"Comercio Minorista",varA:-1.8,varM:-0.4,indice:55,opp:"salir",size:"micro"},{codigo:"C131",nombre:"Industria Textil",varA:-3.2,varM:-0.7,indice:34,opp:"salir",size:"pequena"},{codigo:"F411",nombre:"Construcción Residencial",varA:-5.1,varM:-1.2,indice:40,opp:"salir",size:"pequena"}]},ER:{provincia:"Entre Ríos",var_anual:2.1,var_mensual:-0.3,sectores:[{codigo:"A022",nombre:"Avicultura",varA:7.8,varM:1.9,indice:90,opp:"crecer",size:"mediana"},{codigo:"I551",nombre:"Turismo Termal",varA:9.1,varM:2.2,indice:65,opp:"crecer",size:"pequena"},{codigo:"C101",nombre:"Industria Avícola",varA:6.9,varM:1.4,indice:88,opp:"crecer",size:"mediana"},{codigo:"A011",nombre:"Agricultura – Cereales",varA:5.2,varM:0.8,indice:82,opp:"crecer",size:"mediana"},{codigo:"A031",nombre:"Pesca Continental",varA:3.4,varM:0.5,indice:48,opp:"defender",size:"pequena"},{codigo:"F411",nombre:"Obras Públicas",varA:4.2,varM:0.7,indice:58,opp:"defender",size:"pequena"},{codigo:"C241",nombre:"Metalmecánica",varA:0.8,varM:0.1,indice:51,opp:"observar",size:"pequena"},{codigo:"H491",nombre:"Transporte y Logística",varA:1.1,varM:0.2,indice:55,opp:"observar",size:"pequena"},{codigo:"G471",nombre:"Comercio Minorista",varA:-2.4,varM:-0.6,indice:48,opp:"salir",size:"micro"},{codigo:"C161",nombre:"Industria Forestal",varA:-2.1,varM:-0.5,indice:42,opp:"salir",size:"pequena"}]},SJ:{provincia:"San Juan",var_anual:1.4,var_mensual:0.5,sectores:[{codigo:"D351",nombre:"Energía Solar y Renovable",varA:15.4,varM:3.8,indice:42,opp:"crecer",size:"pequena"},{codigo:"B051",nombre:"Minería – Oro y Plata",varA:12.3,varM:3.1,indice:95,opp:"crecer",size:"mediana"},{codigo:"B091",nombre:"Servicios a la Minería",varA:8.1,varM:1.8,indice:72,opp:"crecer",size:"mediana"},{codigo:"A013",nombre:"Olivicultura",varA:6.8,varM:1.5,indice:55,opp:"crecer",size:"pequena"},{codigo:"C110",nombre:"Elaboración de Vinos",varA:5.2,varM:1.1,indice:74,opp:"crecer",size:"mediana"},{codigo:"F411",nombre:"Construcción Minera",varA:7.2,varM:1.6,indice:65,opp:"crecer",size:"pequena"},{codigo:"A011",nombre:"Vitivinicultura",varA:3.6,varM:0.7,indice:68,opp:"defender",size:"pequena"},{codigo:"I551",nombre:"Turismo Aventura",varA:4.8,varM:1.0,indice:38,opp:"defender",size:"micro"},{codigo:"G471",nombre:"Comercio Minorista",varA:-1.2,varM:-0.3,indice:44,opp:"observar",size:"micro"},{codigo:"C241",nombre:"Minero-Metalurgia",varA:-3.8,varM:-0.8,indice:35,opp:"salir",size:"pequena"}]},SC:{provincia:"Santa Cruz",var_anual:3.8,var_mensual:1.1,sectores:[{codigo:"D351",nombre:"Energía Eólica y Renovable",varA:18.6,varM:4.2,indice:58,opp:"crecer",size:"pequena"},{codigo:"B091",nombre:"Servicios Oil & Gas",varA:10.2,varM:2.5,indice:85,opp:"crecer",size:"mediana"},{codigo:"B060",nombre:"Extracción Petróleo y Gas",varA:8.7,varM:2.1,indice:98,opp:"crecer",size:"mediana"},{codigo:"H491",nombre:"Logística Oil & Gas",varA:7.8,varM:1.9,indice:68,opp:"crecer",size:"pequena"},{codigo:"I551",nombre:"Turismo Glaciares",varA:6.2,varM:1.4,indice:52,opp:"crecer",size:"micro"},{codigo:"F421",nombre:"Construcción Infraestructura",varA:5.9,varM:1.3,indice:70,opp:"crecer",size:"pequena"},{codigo:"A031",nombre:"Pesca Marítima",varA:4.1,varM:0.8,indice:72,opp:"defender",size:"mediana"},{codigo:"C101",nombre:"Procesamiento de Pescado",varA:3.8,varM:0.7,indice:65,opp:"defender",size:"mediana"},{codigo:"A014",nombre:"Ganadería Ovina",varA:-1.4,varM:-0.3,indice:45,opp:"observar",size:"pequena"},{codigo:"G471",nombre:"Comercio Minorista",varA:-0.8,varM:-0.2,indice:42,opp:"observar",size:"micro"}]}};
 const RIESGO={SF:[{nombre:"Maquinaria Agrícola",nivel:"bajo",mora:1.2,cobr:96,varC:+18,d:"Campaña récord. Alta demanda.",a:"Ampliar. Leasing agrícola."},{nombre:"Frigoríficos y Alimentos",nivel:"bajo",mora:1.8,cobr:94,varC:+12,d:"Apertura mercados. TCE favorable.",a:"Capital trabajo + prefinanciación exportaciones."},{nombre:"Servicios Tecnológicos",nivel:"bajo",mora:0.9,cobr:97,varC:+22,d:"Exportador. Factura en USD.",a:"Capital de trabajo, nómina, innovación."},{nombre:"Agricultura – Cereales",nivel:"bajo",mora:1.4,cobr:95,varC:+15,d:"Buenos precios internacionales.",a:"Warrants, crédito cosecha."},{nombre:"Metalmecánica",nivel:"medio",mora:3.1,cobr:88,varC:+5,d:"Dependiente ciclo agrícola.",a:"Monitorear. Mantener posición."},{nombre:"Transporte de Cargas",nivel:"medio",mora:4.2,cobr:84,varC:-2,d:"Costos operativos en alza.",a:"Revisar garantías. Límites conservadores."},{nombre:"Comercio Minorista",nivel:"alto",mora:7.8,cobr:71,varC:-8,d:"Caída consumo. Alta informalidad.",a:"Reducir exposición."},{nombre:"Industria Textil",nivel:"alto",mora:9.2,cobr:65,varC:-14,d:"Competencia importada.",a:"Salir ordenadamente."},{nombre:"Construcción Residencial",nivel:"critico",mora:12.4,cobr:58,varC:-18,d:"Sin hipotecas. Costos en USD.",a:"Solo con garantía hipotecaria AAA."}],ER:[{nombre:"Avicultura",nivel:"bajo",mora:1.1,cobr:97,varC:+20,d:"Líder exportador. Integración vertical.",a:"Crecer agresivamente."},{nombre:"Turismo Termal",nivel:"bajo",mora:2.1,cobr:93,varC:+16,d:"Boom sostenido. Alta ocupación.",a:"Crédito inversión hotelera."},{nombre:"Industria Avícola",nivel:"bajo",mora:1.4,cobr:95,varC:+14,d:"Precios internacionales favorables.",a:"Ampliar. Equipamiento y frío."},{nombre:"Pesca Continental",nivel:"medio",mora:3.8,cobr:86,varC:+4,d:"Estacional.",a:"Vigilar estacionalidad."},{nombre:"Comercio Minorista",nivel:"alto",mora:8.1,cobr:68,varC:-10,d:"Caída consumo interior.",a:"Reducir. Priorizar garantías."},{nombre:"Industria Forestal",nivel:"alto",mora:6.4,cobr:74,varC:-8,d:"Contracción demanda construcción.",a:"No originar."}],SJ:[{nombre:"Minería – Oro y Plata",nivel:"bajo",mora:0.8,cobr:98,varC:+25,d:"Precio oro en máximos.",a:"Máxima prioridad. Corporativo + nómina."},{nombre:"Energía Solar",nivel:"bajo",mora:1.0,cobr:97,varC:+30,d:"Flujo CAMMESA garantizado.",a:"Project finance."},{nombre:"Servicios a la Minería",nivel:"bajo",mora:1.6,cobr:95,varC:+18,d:"Alta predictibilidad.",a:"Capital de trabajo. Equipamiento."},{nombre:"Elaboración de Vinos",nivel:"medio",mora:3.2,cobr:89,varC:+8,d:"Exportación sostenida.",a:"Mantener. Prefinanciación."},{nombre:"Vitivinicultura",nivel:"medio",mora:3.8,cobr:86,varC:+4,d:"Pequeños productores.",a:"Garantías reales requeridas."},{nombre:"Minero-Metalurgia",nivel:"alto",mora:7.2,cobr:72,varC:-10,d:"Menor demanda procesamiento.",a:"Reducir gradualmente."}],SC:[{nombre:"Extracción Petróleo y Gas",nivel:"bajo",mora:0.6,cobr:99,varC:+22,d:"Contratos largo plazo.",a:"Máxima prioridad. Nómina, cash."},{nombre:"Energía Eólica",nivel:"bajo",mora:0.9,cobr:98,varC:+35,d:"PPA garantizados.",a:"Project finance estructurado."},{nombre:"Servicios Oil & Gas",nivel:"bajo",mora:1.2,cobr:96,varC:+20,d:"Contratos operadoras primer nivel.",a:"Ampliar capital de trabajo."},{nombre:"Pesca Marítima",nivel:"medio",mora:2.8,cobr:91,varC:+6,d:"Estacional. Cuotas internacionales.",a:"Mantener. Prefinanciación."},{nombre:"Construcción Infraestructura",nivel:"medio",mora:3.4,cobr:88,varC:+10,d:"Obras atadas a presupuesto.",a:"Vigilar continuidad."},{nombre:"Ganadería Ovina",nivel:"alto",mora:6.8,cobr:75,varC:-6,d:"Caída precio lana.",a:"Reducir. Sin nuevas operaciones."}]};
 const SPARK={SF:{"A011":[4,6,5,8,7,9,6,10,7,6,8,7],"C261":[4,5,6,7,6,8,7,9,8,9,8,8],"C101":[3,4,5,6,5,6,7,6,5,7,6,6],"J620":[5,6,7,8,9,9,10,11,11,11,11,11],"G461":[2,3,4,3,4,5,4,5,5,5,5,5],"C241":[1,2,3,2,3,4,3,4,3,4,3,3],"A012":[2,3,2,4,3,3,2,3,4,2,3,2],"H491":[1,0,1,1,0,1,1,0,1,1,0,1],"I551":[0,1,0,1,1,1,1,1,1,1,1,1],"G471":[2,1,0,-1,0,-1,-2,-1,-2,-1,-2,-2],"C131":[1,2,1,-1,0,-1,-2,-1,-3,-2,-3,-3],"F411":[1,0,-1,-2,-3,-3,-4,-4,-5,-5,-5,-5]},ER:{"A022":[4,5,6,7,7,8,7,8,8,8,8,8],"I551":[3,5,6,7,8,8,9,9,9,9,9,9],"C101":[4,5,5,6,7,7,7,7,7,7,7,7],"A011":[3,4,5,4,5,6,5,6,5,6,5,5],"A031":[2,2,3,3,3,4,3,3,4,3,3,3],"F411":[1,2,3,3,4,4,4,4,4,4,4,4],"C241":[0,1,0,1,1,0,1,1,0,1,0,1],"H491":[0,1,1,1,1,1,1,1,1,1,1,1],"G471":[1,0,-1,-1,-2,-2,-2,-2,-2,-2,-2,-2],"C161":[1,1,0,0,-1,-1,-2,-2,-2,-2,-2,-2]},SJ:{"D351":[5,7,9,11,12,13,14,15,15,15,15,15],"B051":[5,7,8,9,10,11,11,12,12,12,12,12],"B091":[3,4,5,6,7,8,8,8,8,8,8,8],"A013":[3,4,5,5,6,7,7,7,7,7,7,7],"C110":[2,3,4,4,5,5,5,5,5,5,5,5],"F411":[3,4,5,6,6,7,7,7,7,7,7,7],"A011":[2,3,3,4,3,4,4,4,4,4,4,4],"I551":[2,3,3,4,4,5,5,5,5,5,5,5],"G471":[1,0,0,-1,0,-1,-1,-1,-1,-1,-1,-1],"C241":[1,0,-1,-2,-2,-3,-3,-4,-4,-4,-4,-4]},SC:{"D351":[5,8,10,13,15,17,18,19,19,19,19,19],"B091":[4,5,6,8,9,10,10,10,10,10,10,10],"B060":[4,6,7,7,8,8,9,9,9,9,9,9],"H491":[3,4,5,6,7,8,8,8,8,8,8,8],"I551":[2,4,5,5,6,6,6,6,6,6,6,6],"F421":[2,3,4,5,5,6,6,6,6,6,6,6],"A031":[2,3,3,4,4,4,4,4,4,4,4,4],"C101":[2,3,3,4,4,4,4,4,4,4,4,4],"A014":[1,0,0,-1,0,-1,-1,-1,-1,-1,-1,-1],"G471":[1,0,0,0,0,-1,0,-1,-1,-1,-1,-1]}};
 
-function getProvData(){return S.sectoresData[S.prov]||FB[S.prov];}
-function oppTag(o){const m={crecer:'▲ CRECER',salir:'▼ SALIR',defender:'◆ DEFENDER',observar:'○ OBSERVAR'};return`<span class="ot ${o}">${m[o]||o}</span>`;}
-function sparkHtml(prov,cod){const h=(SPARK[prov]||{})[cod]||Array(12).fill(0);const mx=Math.max(...h.map(Math.abs),1);return h.map(v=>{const ht=Math.max(2,Math.round(Math.abs(v)/mx*13));return`<div class="sb ${v>=0?'pos':'neg'}" style="height:${ht}px"></div>`;}).join('');}
+// ─── RENDER ─────────────────────────────────────────────────────────────────
+function getProvData()  { return S.sectoresData[S.prov] || FB[S.prov]; }
+function oppTag(o) {
+  const m = {crecer:'▲ CRECER', salir:'▼ SALIR', defender:'◆ DEFENDER', observar:'○ OBSERVAR'};
+  return `<span class="ot ${o}">${m[o]||o}</span>`;
+}
+function sparkHtml(prov, cod) {
+  const h = (SPARK[prov]||{})[cod] || Array(12).fill(0);
+  const mx = Math.max(...h.map(Math.abs), 1);
+  return h.map(v => {
+    const ht = Math.max(2, Math.round(Math.abs(v)/mx*13));
+    return `<div class="sb ${v>=0?'pos':'neg'}" style="height:${ht}px"></div>`;
+  }).join('');
+}
 
-function renderActividad(){
-  const data=getProvData();let sects=[...data.sectores];
-  if(S.opp!=='todas')sects=sects.filter(s=>s.opp===S.opp);
-  if(S.size!=='todas')sects=sects.filter(s=>s.size===S.size);
-  sects.sort((a,b)=>S.period==='anual'?b.varA-a.varA:b.varM-a.varM);
-  const all=data.sectores;
-  const topC=all.filter(s=>s.opp==='crecer').sort((a,b)=>b.varA-a.varA).slice(0,4);
-  const topS=all.filter(s=>s.varA<0||s.opp==='salir').sort((a,b)=>a.varA-b.varA).slice(0,4);
-  const alertas=S.noticias.filter(n=>n.alerta_temprana&&(n.provincias||[]).includes(S.prov));
-  const ab=$('alertBanner');
-  if(alertas.length){ab.classList.add('visible');$('alertText').textContent=alertas.map(a=>`${a.resumen_corto} [${a.fuente}]`).join(' · ');}else ab.classList.remove('visible');
-  $('actContent').innerHTML=`
+function renderActividad() {
+  const data = getProvData();
+  let sects = [...data.sectores];
+  if (S.opp !== 'todas')  sects = sects.filter(s => s.opp === S.opp);
+  if (S.size !== 'todas') sects = sects.filter(s => s.size === S.size);
+  sects.sort((a,b) => S.period === 'anual' ? b.varA-a.varA : b.varM-a.varM);
+  const all = data.sectores;
+  const topC = all.filter(s => s.opp==='crecer').sort((a,b)=>b.varA-a.varA).slice(0,4);
+  const topS = all.filter(s => s.varA<0||s.opp==='salir').sort((a,b)=>a.varA-b.varA).slice(0,4);
+  const alertas = S.noticias.filter(n => n.alerta_temprana && (n.provincias||[]).includes(S.prov));
+  const ab = $('alertBanner');
+  if (alertas.length) {
+    ab.classList.add('visible');
+    $('alertText').textContent = alertas.map(a=>`${a.resumen_corto} [${a.fuente}]`).join(' · ');
+  } else {
+    ab.classList.remove('visible');
+  }
+  $('actContent').innerHTML = `
     <div class="kpi-row">
       <div class="card card-stripe stripe-green"><div class="card-top"><span class="card-ico">📈</span><span class="tag tag-green">ANUAL</span></div><div class="card-val ${vc(data.var_anual)}">${vs(data.var_anual)}${data.var_anual.toFixed(1)}%</div><div class="card-lbl">Var. Anual PBG · ${data.provincia}</div></div>
       <div class="card card-stripe stripe-yellow"><div class="card-top"><span class="card-ico">📅</span><span class="tag tag-yellow">MENSUAL</span></div><div class="card-val ${vc(data.var_mensual)}">${vs(data.var_mensual)}${data.var_mensual.toFixed(1)}%</div><div class="card-lbl">Var. Mensual · Últ. dato</div></div>
@@ -515,61 +719,111 @@ function renderActividad(){
     <div class="tbl-wrap"><table><thead><tr><th>Actividad</th><th>Cód.</th><th>Sz.</th><th>Var.A</th><th>Var.M</th><th>Idx</th><th>Acción</th></tr></thead><tbody>${all.sort((a,b)=>b.varA-a.varA).map(s=>`<tr><td>${s.nombre}</td><td style="color:var(--muted)">${s.codigo}</td><td style="color:var(--muted)">${s.size}</td><td class="${vc(s.varA)}">${vs(s.varA)}${s.varA.toFixed(1)}%</td><td class="${vc(s.varM)}">${vs(s.varM)}${s.varM.toFixed(1)}%</td><td class="info">${s.indice}</td><td>${oppTag(s.opp)}</td></tr>`).join('')}</tbody></table></div>`;
 }
 
-function renderRiesgo(){
-  const data=RIESGO[S.prov]||[];
-  const lm={bajo:'✓ BAJO',medio:'◆ MEDIO',alto:'⚠ ALTO',critico:'✖ CRÍTICO'};
-  const cm={bajo:'green',medio:'yellow',alto:'red',critico:'purple'};
-  $('riesgoContent').innerHTML=`
+function renderRiesgo() {
+  const data = RIESGO[S.prov] || [];
+  const lm = {bajo:'✓ BAJO', medio:'◆ MEDIO', alto:'⚠ ALTO', critico:'✖ CRÍTICO'};
+  const cm = {bajo:'green', medio:'yellow', alto:'red', critico:'purple'};
+  $('riesgoContent').innerHTML = `
     <div class="sh"><div class="st"><em>RIESGO CREDITICIO</em> · ${FB[S.prov].provincia.toUpperCase()}</div></div>
     <div class="g4" style="margin-bottom:12px">${['bajo','medio','alto','critico'].map(n=>{const cnt=data.filter(d=>d.nivel===n).length;return`<div class="card card-stripe stripe-${cm[n]}"><div class="card-top"><span class="tag tag-${cm[n]}">${n.toUpperCase()}</span></div><div class="card-val" style="color:var(--${cm[n]})">${cnt}</div><div class="card-lbl">sectores</div></div>`;}).join('')}</div>
     <div class="g-risk">${data.map(r=>`<div class="rc ${r.nivel}"><div class="rc-top"><div class="rc-name">${r.nombre}</div><div class="rc-niv ${r.nivel}">${lm[r.nivel]}</div></div><div class="rc-m"><div><div class="rc-mv ${r.mora>5?'neg':r.mora>3?'neu':'pos'}">${r.mora}%</div><div class="rc-ml">Mora</div></div><div><div class="rc-mv ${r.cobr>90?'pos':r.cobr>80?'neu':'neg'}">${r.cobr}%</div><div class="rc-ml">Cobr.</div></div><div><div class="rc-mv ${r.varC>0?'pos':'neg'}">${r.varC>0?'+':''}${r.varC}%</div><div class="rc-ml">Cartera</div></div></div><div class="rc-d">${r.d}<br><strong>→ ${r.a}</strong></div></div>`).join('')}</div>`;
 }
 
-function renderNoticias(){
-  let items=[...S.noticias];
-  if(S.newsFilter==='alertas')items=items.filter(n=>n.alerta_temprana);
-  else if(S.newsFilter==='positivo')items=items.filter(n=>n.sentimiento==='positivo');
-  else if(S.newsFilter==='prov')items=items.filter(n=>(n.provincias||[]).includes(S.prov));
-  $('newsCount').textContent=items.length;
-  if(!items.length){$('newsList').innerHTML='<div class="news-empty">Sin noticias para este filtro.<br>Conectá el backend para noticias IA.</div>';return;}
-  $('newsList').innerHTML=items.slice(0,30).map(n=>{
-    const cls=n.alerta_temprana?'alerta':n.sentimiento==='positivo'?'pcard':'';
-    const fecha=n.fecha?new Date(n.fecha).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'}):'';
-    return`<div class="nc ${cls}" onclick="window.open('${n.link}','_blank')"><div class="nc-top"><div class="nc-tit">${n.titulo}</div><div class="nc-dot ${n.sentimiento}"></div></div>${n.resumen_corto?`<div class="nc-res">${n.resumen_corto}</div>`:''}<div class="nc-ft"><span class="nc-sec">${n.sector}</span>${(n.provincias||[]).map(p=>`<span class="nc-pv">${p}</span>`).join('')}${n.alerta_temprana?'<span style="font-family:DM Mono,monospace;font-size:7px;background:rgba(239,68,68,.15);padding:1px 3px;border-radius:2px;color:var(--red)">⚠</span>':''}<span style="margin-left:auto;font-family:DM Mono,monospace;font-size:8px;color:var(--muted)">${n.fuente} · ${fecha}</span></div></div>`;}).join('');
+function renderNoticias() {
+  let items = [...S.noticias];
+  if (S.newsFilter === 'alertas')  items = items.filter(n => n.alerta_temprana);
+  else if (S.newsFilter === 'positivo') items = items.filter(n => n.sentimiento === 'positivo');
+  else if (S.newsFilter === 'prov') items = items.filter(n => (n.provincias||[]).includes(S.prov));
+  $('newsCount').textContent = items.length;
+  if (!items.length) {
+    $('newsList').innerHTML = '<div class="news-empty">Sin noticias para este filtro.<br>Conectá el backend para noticias IA.</div>';
+    return;
+  }
+  $('newsList').innerHTML = items.slice(0,30).map(n => {
+    const cls = n.alerta_temprana ? 'alerta' : n.sentimiento === 'positivo' ? 'pcard' : '';
+    const fecha = n.fecha ? new Date(n.fecha).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'}) : '';
+    return `<div class="nc ${cls}" onclick="window.open('${n.link}','_blank')"><div class="nc-top"><div class="nc-tit">${n.titulo}</div><div class="nc-dot ${n.sentimiento}"></div></div>${n.resumen_corto?`<div class="nc-res">${n.resumen_corto}</div>`:''}<div class="nc-ft"><span class="nc-sec">${n.sector}</span>${(n.provincias||[]).map(p=>`<span class="nc-pv">${p}</span>`).join('')}${n.alerta_temprana?'<span style="font-family:DM Mono,monospace;font-size:7px;background:rgba(239,68,68,.15);padding:1px 3px;border-radius:2px;color:var(--red)">⚠</span>':''}<span style="margin-left:auto;font-family:DM Mono,monospace;font-size:8px;color:var(--muted)">${n.fuente} · ${fecha}</span></div></div>`;
+  }).join('');
 }
 
-function filterNews(f){S.newsFilter=f;document.querySelectorAll('.nfc').forEach(c=>c.classList.remove('active'));const m={todas:'nfT',alertas:'nfA',positivo:'nfP',prov:'nfPv'};if(m[f])$(m[f]).classList.add('active');renderNoticias();}
-function setTab(t){S.tab=t;document.querySelectorAll('.tab-btn').forEach((b,i)=>{b.classList.toggle('active',['actividad','macro','mora','riesgo','externo'][i]===t);});document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));$(`tab-${t}`).classList.add('active');if(t==='riesgo')renderRiesgo();if(t==='externo')fetchAllCommodities();}
-function setProv(p){S.prov=p;['SF','ER','SJ','SC'].forEach(x=>$(`pb${x}`).classList.toggle('active',x===p));$('filterOpp').value='todas';$('filterSize').value='todas';S.opp='todas';S.size='todas';renderActividad();if(S.tab==='riesgo')renderRiesgo();}
-function applyFilters(){S.opp=$('filterOpp').value;S.size=$('filterSize').value;renderActividad();}
-function setChip(o){S.opp=o;$('filterOpp').value=o;renderActividad();}
-function setPeriod(p){S.period=p;renderActividad();}
-function initTheme(){const saved=localStorage.getItem('eco-theme');if(saved)document.documentElement.className=saved;updateThemeBtn();}
-function toggleTheme(){const isDark=document.documentElement.classList.contains('dark')||(!document.documentElement.classList.contains('light')&&window.matchMedia('(prefers-color-scheme:dark)').matches);const next=isDark?'light':'dark';document.documentElement.className=next;localStorage.setItem('eco-theme',next);updateThemeBtn();}
-function updateThemeBtn(){const isDark=document.documentElement.classList.contains('dark')||(!document.documentElement.classList.contains('light')&&window.matchMedia('(prefers-color-scheme:dark)').matches);$('themeBtn').textContent=isDark?'☀️':'🌙';}
-
-let deferredPrompt=null;
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;if(!localStorage.getItem('install-dismissed'))$('installBanner').classList.add('visible');});
-$('installBtn').addEventListener('click',async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;$('installBanner').classList.remove('visible');});
-function closeInstall(){$('installBanner').classList.remove('visible');localStorage.setItem('install-dismissed','1');}
-if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
-
-function updateTCE(dolar){
-  if(!dolar)return;
-  const of=dolar.oficial?.venta||dolar.bolsa?.venta;
-  const mep=dolar.bolsa?.venta;
-  if(!of)return;
-  const fmt2=n=>`$${Math.round(n).toLocaleString('es-AR')}`;
-  if($('tceAgro'))    $('tceAgro').textContent    = fmt2(of*(1-0.33));  // soja 33%
-  if($('tceHidro'))   $('tceHidro').textContent   = fmt2(of*(1-0.08));  // hidro 8%
-  if($('tceMineria')) $('tceMineria').textContent = fmt2(of*(1-0.085)); // minería 8.5%
-  if($('tceSoftware'))$('tceSoftware').textContent= mep ? fmt2(mep) : fmt2(of); // software cobra a MEP
+// ─── CONTROLES ───────────────────────────────────────────────────────────────
+function filterNews(f) {
+  S.newsFilter = f;
+  document.querySelectorAll('.nfc').forEach(c => c.classList.remove('active'));
+  const m = {todas:'nfT', alertas:'nfA', positivo:'nfP', prov:'nfPv'};
+  if (m[f]) $(m[f]).classList.add('active');
+  renderNoticias();
 }
+function setTab(t) {
+  S.tab = t;
+  document.querySelectorAll('.tab-btn').forEach((b,i) => {
+    b.classList.toggle('active', ['actividad','macro','mora','riesgo','externo'][i]===t);
+  });
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  $(`tab-${t}`).classList.add('active');
+  if (t === 'riesgo')  renderRiesgo();
+  if (t === 'externo') fetchAllCommodities();
+}
+function setProv(p) {
+  S.prov = p;
+  ['SF','ER','SJ','SC'].forEach(x => $(`pb${x}`).classList.toggle('active', x===p));
+  $('filterOpp').value  = 'todas';
+  $('filterSize').value = 'todas';
+  S.opp = 'todas'; S.size = 'todas';
+  renderActividad();
+  if (S.tab === 'riesgo') renderRiesgo();
+}
+function applyFilters() { S.opp=$('filterOpp').value; S.size=$('filterSize').value; renderActividad(); }
+function setChip(o)     { S.opp=o; $('filterOpp').value=o; renderActividad(); }
+function setPeriod(p)   { S.period=p; renderActividad(); }
+
+// ─── TEMA ────────────────────────────────────────────────────────────────────
+function initTheme() {
+  const saved = localStorage.getItem('eco-theme');
+  if (saved) document.documentElement.className = saved;
+  updateThemeBtn();
+}
+function toggleTheme() {
+  const isDark = document.documentElement.classList.contains('dark') ||
+    (!document.documentElement.classList.contains('light') && window.matchMedia('(prefers-color-scheme:dark)').matches);
+  const next = isDark ? 'light' : 'dark';
+  document.documentElement.className = next;
+  localStorage.setItem('eco-theme', next);
+  updateThemeBtn();
+}
+function updateThemeBtn() {
+  const isDark = document.documentElement.classList.contains('dark') ||
+    (!document.documentElement.classList.contains('light') && window.matchMedia('(prefers-color-scheme:dark)').matches);
+  $('themeBtn').textContent = isDark ? '☀️' : '🌙';
+}
+
+// ─── PWA ─────────────────────────────────────────────────────────────────────
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); deferredPrompt = e;
+  if (!localStorage.getItem('install-dismissed')) $('installBanner').classList.add('visible');
+});
+$('installBtn').addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  $('installBanner').classList.remove('visible');
+});
+function closeInstall() {
+  $('installBanner').classList.remove('visible');
+  localStorage.setItem('install-dismissed','1');
+}
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
 initTheme();
 renderActividad();
 refreshAll();
-setInterval(refreshAll,15*60*1000);
-setInterval(fetchAllCommodities,5*60*1000);
+
+// Auto-refresh: datos financieros cada 15 min, commodities cada 5 min
+setInterval(refreshAll, 15 * 60 * 1000);
+setInterval(fetchAllCommodities, 5 * 60 * 1000);
 </script>
 </body>
 </html>
