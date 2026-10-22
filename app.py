@@ -217,18 +217,13 @@ def get_indicadores():
                 "nombre": d.get("nombre"),
             }
 
-    # BCRA Variables principales
-    # 27 = inflación mensual, 7 = tasa pases pasivos, 6 = tasa badlar, 29 = reservas
-    bcra_ids = {
-        "inflacion_mensual": 27,
-        "tasa_politica":     6,
-        "reservas_bn":       1,
-        "base_monetaria":    15,
-    }
-    for nombre, vid in bcra_ids.items():
-        val = fetch_bcra_serie(vid)
-        if val is not None:
-            result["bcra"][nombre] = val
+    # BCRA Variables principales — API v4.0 (la v2.0 fue dada de baja)
+    try:
+        from datos_externos import get_bcra_core
+        result["bcra"] = {k: v for k, v in get_bcra_core().items() if v is not None}
+    except Exception as e:
+        log.error(f"bcra core error: {e}")
+        result["error"] = f"bcra: {e}"
 
     return result
 
@@ -367,14 +362,13 @@ def ping():
 
 
 @app.route("/api/indicadores-ext")
-@cached("indicadores_ext", "indicadores")
 def indicadores_ext():
     """
-    Datos reales de datos.gob.ar + BCRA:
-      - mora sistema y privados (calculada como %)
-      - señales adelantadas: IPI cemento, EMI
-      - EMAE mensual
-      - tasas extra: PF 30d TNA/TEA, BADLAR público, TC ref BNA
+    Datos reales de datos.gob.ar + BCRA v4.0 (caché propio en datos_externos):
+      - mora sistema y privados (%)
+      - señales: IPI cemento (i.a.), IPI manufacturero desest. (m/m)
+      - EMAE desest. (m/m) e interanual
+      - tasas extra: PF 30d, BADLAR total sistema, TC mayorista
     """
     try:
         from datos_externos import get_indicadores_ext

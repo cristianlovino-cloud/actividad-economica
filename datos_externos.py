@@ -1,274 +1,257 @@
 """
-datos_externos.py — Módulo de datos reales para ECO RADAR
-Integra: datos.gob.ar (mora, cemento, EMI, EMAE) + BCRA API extra
-Cachea en memoria 24hs para no martillar las APIs en cada request.
+datos_externos.py — Datos reales para ECO RADAR (v2, oct-2026)
 
-INSTALACIÓN: solo requiere `requests` (ya en cualquier Flask/FastAPI setup)
+Fuentes (IDs verificados 22-oct-2026):
+  • BCRA API v4.0  → https://api.bcra.gob.ar/estadisticas/v4.0/monetarias
+      (la v2.0 fue dada de baja; un solo GET trae el último valor de todas las variables)
+  • datos.gob.ar   → https://apis.datos.gob.ar/series/api/series/
+      (cada serie se pide POR SEPARADO: si un ID falla, no tumba al resto)
 
-USO en tu app principal:
-    from datos_externos import get_indicadores_ext
-
-    @app.route("/api/indicadores-ext")
-    def indicadores_ext():
-        return jsonify(get_indicadores_ext())
-
-    @app.route("/api/ping")          # ← también agregá este
-    def ping():
-        return jsonify({"ok": True})
+Expone:
+  get_indicadores_ext()  → mora, señales, EMAE, tasas extra
+  get_bcra_core()        → inflación, BADLAR, TM20, PF, reservas, TC (para /api/indicadores)
 """
 
-import requests
 import time
 import logging
 from datetime import datetime
 
+import requests
+
 logger = logging.getLogger(__name__)
 
-# ─── CACHÉ EN MEMORIA ────────────────────────────────────────────────────────
-_cache = {}
-CACHE_TTL = 60 * 60 * 24  # 24 horas
+HEADERS = {"User-Agent": "EcoRadar/2.0 (+https://github.com)"}
+TIMEOUT = 15
 
-def _cached(key, fn):
-    """Ejecuta fn() y cachea el resultado TTL segundos."""
+# ─── CACHÉ ───────────────────────────────────────────────────────────────────
+_cache = {}
+TTL_OK = 60 * 60 * 6      # 6 h si vino bien
+TTL_FAIL = 60 * 5         # 5 min si vino vacío (reintenta pronto)
+
+
+def _cached(key, fn, ok_check):
     now = time.time()
-    if key in _cache:
-        data, ts = _cache[key]
-        if now - ts < CACHE_TTL:
-            return data
+    hit = _cache.get(key)
+    if hit and now - hit[1] < hit[2]:
+        return hit[0]
     try:
         data = fn()
-        if data is not None:
-            _cache[key] = (data, now)
-        return data
     except Exception as e:
-        logger.warning(f"[datos_ext] error en {key}: {e}")
-        # Si hay cache vieja, devolvela igual (mejor dato viejo que nada)
-        if key in _cache:
-            return _cache[key][0]
-        return None
+        logger.warning(f"[datos_ext] {key}: {e}")
+        data = None
+    ok = data is not None and ok_check(data)
+    if ok:
+        _cache[key] = (data, now, TTL_OK)
+        return data
+    # Falló: si hay un dato viejo bueno, devolverlo
+    if hit and hit[2] == TTL_OK:
+        return hit[0]
+    _cache[key] = (data, now, TTL_FAIL)
+    return data
 
 
-# ─── CLIENTE HTTP SIMPLE ──────────────────────────────────────────────────────
-HEADERS = {"User-Agent": "EcoRadar/1.0 (Grupo Petersen; contacto@bsf.com.ar)"}
-TIMEOUT = 12
-
-def _get(url, params=None):
-    r = requests.get(url, params=params, headers=HEADERS, timeout=TIMEOUT)
+def _get_json(url, params=None):
+    try:
+        r = requests.get(url, params=params, headers=HEADERS, timeout=TIMEOUT)
+    except requests.exceptions.SSLError:
+        # api.bcra.gob.ar suele tener la cadena de certificados incompleta
+        import urllib3
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        r = requests.get(url, params=params, headers=HEADERS, timeout=TIMEOUT, verify=False)
     r.raise_for_status()
     return r.json()
 
 
-# ─── DATOS.GOB.AR — Series de Tiempo ─────────────────────────────────────────
-BASE_ST = "https://apis.datos.gob.ar/series/api/series/"
+# ─── BCRA v4.0 ───────────────────────────────────────────────────────────────
+BCRA_URL = "https://api.bcra.gob.ar/estadisticas/v4.0/monetarias"
 
-SERIES = {
-    # Mora / Irregularidad (en millones de pesos — necesitamos dos para calcular %)
-    "irreg_sistema":   "332.2_SISTEMA_FIADA__53",   # cartera irregular total sistema
-    "irreg_privados":  "332.2_BANCOS_PRIADA__51",   # cartera irregular privados
-
-    # Cartera total (para calcular el ratio de mora en %)
-    "cartera_sistema": "330.2_SISTEMA_FTOT__53",    # cartera total sistema financiero
-    "cartera_priv":    "330.2_BANCOS_PRITOT__51",   # cartera total privados
-
-    # Señales adelantadas
-    "cemento_ipi":    "453.2_CEMENTONTO_0_0_7_59",  # IPI cemento (índice mensual)
-
-    # EMI — Estimador Mensual Industrial (nivel general)
-    "emi_general":    "11.3_IM_2004_M_15",           # EMI nivel general base 2004
-
-    # EMAE — Actividad Económica nivel general
-    "emae_general":   "11.3_VMATC_2004_M_12",        # EMAE nivel general mensual
-
-    # Tasas (datos.gob.ar replica BCRA)
-    "tasa_pf_30":     "174.1_T_DEPOPLA_0_0_37",      # Tasa depósitos PF 30d
-    "tasa_activa_1l": "174.1_T_INTERO_I_0_0_57",     # Tasa activa empresas 1a línea
+BCRA_IDS = {
+    "reservas":        1,    # Reservas internacionales (millones USD)
+    "tc_minorista":    4,    # TC minorista promedio vendedor
+    "tc_mayorista":    5,    # TC mayorista de referencia (Com. A 3500)
+    "badlar_priv":     7,    # BADLAR bancos privados TNA
+    "tm20_priv":       8,    # TM20 bancos privados TNA
+    "pf_30d":          12,   # Tasa depósitos 30 días TNA
+    "inflacion_mens":  27,   # Inflación mensual %
+    "badlar_priv_tea": 35,   # BADLAR privados TEA
+    "badlar_total":    138,  # BADLAR bancos públicos y privados TNA
+    "tm20_total":      141,  # TM20 públicos y privados TNA
+    "tasa_politica":   160,  # Tasa política monetaria TNA (BCRA dejó de fijarla en jul-2025)
 }
 
-def _fetch_series(ids: list, limit=2) -> dict:
-    """
-    Trae los últimos `limit` registros de varias series en un solo call.
-    Devuelve dict {serie_id: [val_ultimo, val_anterior]} o None si falla.
-    """
-    ids_str = ",".join(ids)
-    try:
-        data = _get(BASE_ST, params={
-            "ids": ids_str,
-            "limit": limit,
-            "sort": "desc",
-            "format": "json",
-        })
-    except Exception as e:
-        logger.warning(f"[series] error fetching {ids_str[:60]}: {e}")
-        return {}
 
-    result = {}
-    series_meta = data.get("meta", [])
-    rows = data.get("data", [])
-
-    if not rows:
-        return result
-
-    # La respuesta tiene columnas: [fecha, val_serie1, val_serie2, ...]
-    # meta[0] es la fecha, meta[1..] son las series en el orden pedido
-    for i, meta in enumerate(series_meta[1:], start=1):  # skip fecha
-        sid = meta.get("field", {}).get("id", f"col_{i}")
-        vals = []
-        for row in rows:
-            v = row[i] if len(row) > i else None
-            vals.append(v)
-        result[sid] = vals  # [más_reciente, anterior]
-
-    return result
+def _fetch_bcra_all():
+    """Un GET (paginado) a /monetarias → {idVariable: (valor, fecha)}."""
+    out = {}
+    offset = 0
+    for _ in range(3):
+        data = _get_json(BCRA_URL, params={"limit": 1000, "offset": offset})
+        results = data.get("results", []) or []
+        for it in results:
+            vid = it.get("idVariable")
+            if vid is not None:
+                out[vid] = (it.get("ultValorInformado"), it.get("ultFechaInformada"))
+        total = (data.get("metadata", {}).get("resultset", {}) or {}).get("count", 0)
+        offset += len(results)
+        if not results or offset >= total:
+            break
+    return out
 
 
-def _pct_change(v_new, v_old):
-    """Variación porcentual entre dos valores."""
-    if v_new is None or v_old is None or v_old == 0:
+def _bcra_all():
+    return _cached("bcra_all", _fetch_bcra_all, lambda d: len(d) > 0) or {}
+
+
+def _bv(name):
+    v = _bcra_all().get(BCRA_IDS[name])
+    return (v[0], v[1]) if v else (None, None)
+
+
+def get_bcra_core():
+    """Variables principales para /api/indicadores (claves que lee el frontend)."""
+    infl, infl_f = _bv("inflacion_mens")
+    badlar, badlar_f = _bv("badlar_priv")
+    tm20, _ = _bv("tm20_priv")
+    res, res_f = _bv("reservas")
+    pol, pol_f = _bv("tasa_politica")
+    return {
+        "inflacion_mensual": infl,
+        "inflacion_fecha":   infl_f,
+        "badlar":            badlar,
+        "badlar_fecha":      badlar_f,
+        "tm20":              tm20,
+        "reservas_bn":       round(res / 1000, 1) if res else None,  # miles de millones USD
+        "reservas_fecha":    res_f,
+        "tasa_politica":     pol,
+        "tasa_politica_fecha": pol_f,
+    }
+
+
+# ─── DATOS.GOB.AR ────────────────────────────────────────────────────────────
+SERIES_URL = "https://apis.datos.gob.ar/series/api/series/"
+
+SERIES = {
+    # Mora — ratio de irregularidad cartera privada, YA en % (aunque la API diga "millones")
+    "mora_sistema":  "332.2_SISTEMA_FIADA__53",
+    "mora_privados": "332.2_BANCOS_PRIADA__51",
+    # Señales
+    "cemento":       "453.2_CEMENTONTO_0_0_7_59",       # IPI cemento, serie original
+    "ipi_desest":    "453.1_SERIE_DESEADA_0_0_24_58",   # IPI manufacturero desestacionalizado (reemplaza EMI, discontinuado)
+    # Actividad
+    "emae_desest":   "143.3_NO_PR_2004_A_31",           # EMAE desestacionalizado
+    "emae_orig":     "143.3_NO_PR_2004_A_21",           # EMAE original (para var. interanual)
+    # Tasa PF mensual (respaldo si falla BCRA)
+    "pf_30_59":      "89.1_TIPF35D_0_0_35",
+}
+
+
+def _fetch_serie(sid, limit=14):
+    """Devuelve lista [(fecha, valor), ...] desc, sin nulls."""
+    data = _get_json(SERIES_URL, params={"ids": sid, "limit": limit, "sort": "desc", "format": "json"})
+    rows = data.get("data", []) or []
+    return [(r[0], r[1]) for r in rows if len(r) > 1 and r[1] is not None]
+
+
+def _serie(name):
+    sid = SERIES[name]
+    return _cached(f"serie:{sid}", lambda: _fetch_serie(sid), lambda d: len(d) > 0) or []
+
+
+def _pct(a, b):
+    if a is None or b in (None, 0):
         return None
-    return round((v_new - v_old) / abs(v_old) * 100, 2)
+    return round((a - b) / abs(b) * 100, 2)
 
-def _last(vals):
-    """Primer valor no-None de una lista."""
-    for v in (vals or []):
-        if v is not None:
-            return v
+
+def _yoy(rows):
+    """Var. interanual: último dato vs mismo mes del año anterior."""
+    if not rows:
+        return None
+    f0, v0 = rows[0]
+    target = f"{int(f0[:4]) - 1}{f0[4:]}"
+    for f, v in rows:
+        if f == target:
+            return _pct(v0, v)
     return None
 
 
-# ─── BCRA API — Variables adicionales ────────────────────────────────────────
-BASE_BCRA = "https://api.bcra.gob.ar/estadisticas/v2.0/datosvariable"
-
-BCRA_VARS = {
-    # Variables que no están en el frontend actual
-    "tasa_pf_30":   31,   # Tasa depósitos PF 30-44 días bancos privados
-    "badlar_pub":   9,    # BADLAR bancos públicos
-    "tasa_pase_1d": 5,    # Tasa pases pasivos 1 día (referencia corto)
-    "m2_privado":   15,   # M2 privado (billetes + depósitos)
-    "base_mon":     16,   # Base monetaria
-    "tipo_cambio":  4,    # Tipo de cambio referencia BNA
-}
-
-def _fetch_bcra_var(var_id: int):
-    try:
-        url = f"{BASE_BCRA}/{var_id}/1/1"
-        data = _get(url)
-        v = data.get("results", [{}])[0].get("valor")
-        return v
-    except Exception as e:
-        logger.warning(f"[bcra] var {var_id}: {e}")
-        return None
+def _mom(rows):
+    return _pct(rows[0][1], rows[1][1]) if len(rows) > 1 else None
 
 
-# ─── FUNCIÓN PRINCIPAL ────────────────────────────────────────────────────────
+def _r(v, n=2):
+    return round(v, n) if v is not None else None
 
-def _build_indicadores_ext():
-    """Construye el objeto completo. Se cachea 24hs."""
 
-    resultado = {
+# ─── ENDPOINT PRINCIPAL ──────────────────────────────────────────────────────
+def _build():
+    mora_s = _serie("mora_sistema")
+    mora_p = _serie("mora_privados")
+    cem = _serie("cemento")
+    ipi = _serie("ipi_desest")
+    emae_d = _serie("emae_desest")
+    emae_o = _serie("emae_orig")
+    pf_m = _serie("pf_30_59")
+
+    pf, pf_f = _bv("pf_30d")
+    if pf is None and pf_m:
+        pf, pf_f = pf_m[0][1], pf_m[0][0]
+    badlar_tot, _ = _bv("badlar_total")
+    tc_may, tc_f = _bv("tc_mayorista")
+
+    return {
         "timestamp": datetime.utcnow().isoformat() + "Z",
-        "mora": {},
-        "senales": {},
-        "actividad": {},
-        "tasas_ext": {},
+        "mora": {
+            "sistema_pct":    _r(mora_s[0][1]) if mora_s else None,
+            "privados_pct":   _r(mora_p[0][1]) if mora_p else None,
+            "sistema_var_pp": _r(mora_s[0][1] - mora_s[1][1]) if len(mora_s) > 1 else None,
+            "sistema_12m_pp": _r(mora_s[0][1] - mora_s[12][1]) if len(mora_s) > 12 else None,
+            "periodo":        mora_s[0][0] if mora_s else None,
+        },
+        "senales": {
+            "cemento_ipi":    _r(cem[0][1], 1) if cem else None,
+            "cemento_var_ya": _yoy(cem),
+            "cemento_periodo": cem[0][0] if cem else None,
+            "ipi_idx":        _r(ipi[0][1], 1) if ipi else None,
+            "ipi_var_mm":     _mom(ipi),
+            "ipi_periodo":    ipi[0][0] if ipi else None,
+        },
+        "actividad": {
+            "emae_idx":    _r(emae_d[0][1], 1) if emae_d else None,
+            "emae_var_mm": _mom(emae_d),
+            "emae_var_ya": _yoy(emae_o),
+            "periodo":     emae_d[0][0] if emae_d else None,
+        },
+        "tasas_ext": {
+            "pf_30d_tna":   pf,
+            "pf_30d_tea":   _r(((1 + pf / 100 / 365) ** 365 - 1) * 100) if pf else None,
+            "pf_fecha":     pf_f,
+            "badlar_total": badlar_tot,
+            "tc_mayorista": tc_may,
+            "tc_fecha":     tc_f,
+        },
         "fuentes": {
-            "mora": "datos.gob.ar / BCRA (serie 332.2)",
-            "senales": "datos.gob.ar / INDEC (IPI cemento, EMI)",
-            "actividad": "datos.gob.ar / INDEC (EMAE)",
-            "tasas_ext": "BCRA API v2 + datos.gob.ar",
-        }
+            "mora": "BCRA vía datos.gob.ar (332.2 irregularidad cartera privada)",
+            "senales": "INDEC vía datos.gob.ar (IPI cemento, IPI manufacturero)",
+            "actividad": "INDEC vía datos.gob.ar (EMAE base 2004)",
+            "tasas_ext": "BCRA API v4.0",
+        },
     }
 
-    # ── 1. Series de datos.gob.ar ────────────────────────────────────────────
-    ids_a_pedir = list(SERIES.values())
-    # Pedimos en dos lotes para no superar el límite de la API (~10 series por call)
-    lote1 = ids_a_pedir[:6]
-    lote2 = ids_a_pedir[6:]
 
-    raw1 = _fetch_series(lote1, limit=3)
-    raw2 = _fetch_series(lote2, limit=3)
-    raw = {**raw1, **raw2}
-
-    # Helper: obtener última valor de una serie por nombre lógico
-    def sv(nombre):
-        sid = SERIES.get(nombre)
-        return _last(raw.get(sid, []))
-
-    def sv_prev(nombre):
-        vals = raw.get(SERIES.get(nombre), [])
-        return vals[1] if len(vals) > 1 else None
-
-    # ── 2. MORA ─────────────────────────────────────────────────────────────
-    irreg_sis   = sv("irreg_sistema")
-    irreg_priv  = sv("irreg_privados")
-    cart_sis    = sv("cartera_sistema")
-    cart_priv   = sv("cartera_priv")
-
-    # Ratio de mora = cartera irregular / cartera total * 100
-    mora_sistema  = round(irreg_sis  / cart_sis  * 100, 2) if irreg_sis  and cart_sis  else None
-    mora_privados = round(irreg_priv / cart_priv * 100, 2) if irreg_priv and cart_priv else None
-
-    # Variación mensual de montos (proxy de tendencia)
-    irreg_sis_prev  = sv_prev("irreg_sistema")
-    irreg_priv_prev = sv_prev("irreg_privados")
-
-    resultado["mora"] = {
-        "sistema_pct":   mora_sistema,     # % mora total sistema
-        "privados_pct":  mora_privados,    # % mora bancos privados
-        "irreg_sis_mm":  _pct_change(irreg_sis,  irreg_sis_prev),   # var mensual monto
-        "irreg_priv_mm": _pct_change(irreg_priv, irreg_priv_prev),
-        "nota": "Ratio calculado: cartera irregular / cartera total (BCRA vía datos.gob.ar)"
-    }
-
-    # ── 3. SEÑALES ADELANTADAS ───────────────────────────────────────────────
-    cemento_act  = sv("cemento_ipi")
-    cemento_prev = sv_prev("cemento_ipi")
-    emi_act      = sv("emi_general")
-    emi_prev     = sv_prev("emi_general")
-
-    resultado["senales"] = {
-        "cemento_ipi":    cemento_act,
-        "cemento_var_mm": _pct_change(cemento_act, cemento_prev),
-        "emi_idx":        emi_act,
-        "emi_var_mm":     _pct_change(emi_act, emi_prev),
-    }
-
-    # ── 4. ACTIVIDAD (EMAE) ──────────────────────────────────────────────────
-    emae_act  = sv("emae_general")
-    emae_prev = sv_prev("emae_general")
-
-    resultado["actividad"] = {
-        "emae_idx":    emae_act,
-        "emae_var_mm": _pct_change(emae_act, emae_prev),
-        "emae_var_ya": None,  # se puede calcular si traemos 13 meses
-    }
-
-    # ── 5. TASAS EXTRA (BCRA) ────────────────────────────────────────────────
-    # Llamadas BCRA solo para vars que no están en el frontend actual
-    # (tasa política, BADLAR, reservas ya los maneja el frontend directamente)
-    tasa_pf   = _fetch_bcra_var(BCRA_VARS["tasa_pf_30"])
-    badlar_pub = _fetch_bcra_var(BCRA_VARS["badlar_pub"])
-    tc_ref    = _fetch_bcra_var(BCRA_VARS["tipo_cambio"])
-
-    resultado["tasas_ext"] = {
-        "pf_30d_tna":    tasa_pf,                                       # TNA plazo fijo 30d
-        "pf_30d_tea":    round(((1 + tasa_pf/100/365)**365 - 1)*100, 2) if tasa_pf else None,
-        "badlar_pub":    badlar_pub,                                     # BADLAR bancos públicos
-        "tc_ref_bna":    tc_ref,                                         # TC referencia BNA
-    }
-
-    return resultado
+def _has_data(d):
+    return any(v is not None for blk in ("mora", "senales", "actividad", "tasas_ext")
+               for k, v in d.get(blk, {}).items() if k not in ("periodo",))
 
 
 def get_indicadores_ext():
-    """Entry point público — devuelve datos cacheados 24hs."""
-    return _cached("indicadores_ext", _build_indicadores_ext) or {
-        "error": "No se pudieron obtener datos externos",
-        "timestamp": datetime.utcnow().isoformat() + "Z"
-    }
+    data = _cached("indicadores_ext", _build, _has_data)
+    return data or {"error": "No se pudieron obtener datos externos",
+                    "timestamp": datetime.utcnow().isoformat() + "Z"}
 
 
-# ─── STANDALONE TEST ──────────────────────────────────────────────────────────
 if __name__ == "__main__":
     import json
     logging.basicConfig(level=logging.INFO)
+    print(json.dumps(get_bcra_core(), indent=2, ensure_ascii=False))
     print(json.dumps(get_indicadores_ext(), indent=2, ensure_ascii=False))

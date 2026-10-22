@@ -258,20 +258,21 @@ tbody tr:hover td{background:var(--s2)}
   <div class="sh"><div class="st"><em>02</em> BCRA — PRINCIPALES VARIABLES</div></div>
   <div class="g4">
     <div class="card card-stripe stripe-red"><div class="card-top"><span class="card-ico">📈</span><span class="tag tag-red">INFLACIÓN</span></div><div class="card-val neg" id="mInfl">—</div><div class="card-lbl">IPC mensual</div><div class="card-sub" id="mInflA">acum. 12m: —</div></div>
-    <div class="card card-stripe stripe-yellow"><div class="card-top"><span class="card-ico">🏦</span><span class="tag tag-yellow">TASA BCRA</span></div><div class="card-val neu" id="mTasaBcra">—</div><div class="card-lbl">Política monetaria (TNA)</div></div>
+    <div class="card card-stripe stripe-yellow"><div class="card-top"><span class="card-ico">🏦</span><span class="tag tag-yellow">TASA BCRA</span></div><div class="card-val neu" id="mTasaBcra">—</div><div class="card-lbl">Política monetaria (TNA)</div><div class="card-sub" id="mTasaBcraF">—</div></div>
     <div class="card card-stripe stripe-blue"><div class="card-top"><span class="card-ico">🏦</span><span class="tag tag-blue">RESERVAS</span></div><div class="card-val info" id="mRes">—</div><div class="card-lbl">Reservas brutas BCRA</div></div>
     <div class="card card-stripe stripe-blue"><div class="card-top"><span class="card-ico">📉</span><span class="tag tag-blue">BRECHA</span></div><div class="card-val neu" id="mBrechaG">—</div><div class="card-lbl">Blue vs Oficial</div></div>
   </div>
   <div class="sh"><div class="st"><em>03</em> SEÑALES ADELANTADAS</div><span style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted)">INDEC · datos.gob.ar</span></div>
   <div class="g4">
-    <div class="card"><div class="card-top"><span class="card-ico">🏗</span><span class="tag tag-green">CEMENTO</span></div><div class="card-val pos" id="senalCemento">—</div><div class="card-lbl">Var. mensual</div><div class="card-sub" id="senalCementoSub">Proxy construcción</div></div>
+    <div class="card"><div class="card-top"><span class="card-ico">🏗</span><span class="tag tag-green">CEMENTO</span></div><div class="card-val pos" id="senalCemento">—</div><div class="card-lbl">Var. interanual</div><div class="card-sub" id="senalCementoSub">Proxy construcción</div></div>
     <div class="card"><div class="card-top"><span class="card-ico">🚗</span><span class="tag tag-red">PATENT.</span></div><div class="card-val neg">-8.4%</div><div class="card-lbl">Var. anual</div><div class="card-sub">Proxy consumo</div></div>
     <div class="card"><div class="card-top"><span class="card-ico">⚡</span><span class="tag tag-green">ENERGÍA</span></div><div class="card-val pos">+1.8%</div><div class="card-lbl">Industria</div><div class="card-sub">Proxy producción</div></div>
-    <div class="card"><div class="card-top"><span class="card-ico">📦</span><span class="tag tag-yellow">EMI</span></div><div class="card-val neu" id="senalEMI">—</div><div class="card-lbl">INDEC Mensual</div><div class="card-sub" id="senalEMISub">Est. industria</div></div>
+    <div class="card"><div class="card-top"><span class="card-ico">📦</span><span class="tag tag-yellow">IPI MANUF.</span></div><div class="card-val neu" id="senalEMI">—</div><div class="card-lbl">Var. mensual desest.</div><div class="card-sub" id="senalEMISub">INDEC industria</div></div>
   </div>
   <div class="sh"><div class="st"><em>04</em> ACTIVIDAD — EMAE NACIONAL</div><span style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted)">INDEC · datos.gob.ar</span></div>
   <div class="g4" style="margin-bottom:0">
-    <div class="card card-stripe stripe-cyan"><div class="card-top"><span class="card-ico">📊</span><span class="tag tag-cyan">EMAE</span></div><div class="card-val info" id="emaeNacional">—</div><div class="card-lbl">Var. mensual EMAE</div><div class="card-sub" id="emaeSub">Actividad económica general</div></div>
+    <div class="card card-stripe stripe-cyan"><div class="card-top"><span class="card-ico">📊</span><span class="tag tag-cyan">EMAE</span></div><div class="card-val info" id="emaeNacional">—</div><div class="card-lbl">Var. mensual desest.</div><div class="card-sub" id="emaeSub">Actividad económica general</div></div>
+    <div class="card card-stripe stripe-cyan"><div class="card-top"><span class="card-ico">📅</span><span class="tag tag-cyan">EMAE i.a.</span></div><div class="card-val info" id="emaeYoY">—</div><div class="card-lbl">Var. interanual</div><div class="card-sub">vs. mismo mes año anterior</div></div>
   </div>
 </div>
 
@@ -283,18 +284,18 @@ tbody tr:hover td{background:var(--s2)}
     <div class="mora-card empresas"><div class="mora-top"><div class="mora-nombre">🏢 Empresas</div><span class="tag tag-purple">CORPORATIVO</span></div><div class="mora-val" style="color:var(--purple)">2.9%</div><div class="mora-desc">Irregularidad cartera comercial · dic-2025</div><div class="mora-bar-bg"><div class="mora-bar" style="width:29%;background:var(--purple)"></div></div><div class="mora-meta"><div><div class="mora-kpi-val pos">0.9%</div><div class="mora-kpi-lbl">Grandes</div></div><div><div class="mora-kpi-val neu">2.7%</div><div class="mora-kpi-lbl">ene-2026</div></div><div><div class="mora-kpi-val neg">4.0%</div><div class="mora-kpi-lbl">PyMEs</div></div></div></div>
     <div class="mora-card pymes"><div class="mora-top"><div class="mora-nombre">🏭 PyMEs</div><span class="tag tag-yellow">SEPyME</span></div><div class="mora-val" style="color:var(--yellow)">4.0%</div><div class="mora-desc">Irregularidad cartera PyME · ene-2026</div><div class="mora-bar-bg"><div class="mora-bar" style="width:40%;background:var(--yellow)"></div></div><div class="mora-meta"><div><div class="mora-kpi-val neg">1/8</div><div class="mora-kpi-lbl">c/empresa</div></div><div><div class="mora-kpi-val neg">4.0%</div><div class="mora-kpi-lbl">Pyme</div></div><div><div class="mora-kpi-val pos">0.9%</div><div class="mora-kpi-lbl">Grandes</div></div></div></div>
     <!-- SISTEMA: datos en vivo desde datos.gob.ar via backend -->
-    <div class="mora-card total"><div class="mora-top"><div class="mora-nombre">🏦 Sistema</div><span class="tag tag-red">TOTAL</span></div><div class="mora-val" style="color:var(--red)" id="moraTotal">—</div><div class="mora-desc" id="moraTotalDesc">Mora total · cargando...</div><div class="mora-bar-bg"><div class="mora-bar" id="moraBarTotal" style="width:0%;background:var(--red)"></div></div><div class="mora-meta"><div><div class="mora-kpi-val neg" id="moraSistemaMM">—</div><div class="mora-kpi-lbl">Irreg.Sis. ($M)</div></div><div><div class="mora-kpi-val neg" id="moraPrivados">—</div><div class="mora-kpi-lbl">Privados %</div></div><div><div class="mora-kpi-val" id="moraTotalTend">—</div><div class="mora-kpi-lbl">Tend. m/m</div></div></div></div>
+    <div class="mora-card total"><div class="mora-top"><div class="mora-nombre">🏦 Sistema</div><span class="tag tag-red">TOTAL</span></div><div class="mora-val" style="color:var(--red)" id="moraTotal">—</div><div class="mora-desc" id="moraTotalDesc">Mora total · cargando...</div><div class="mora-bar-bg"><div class="mora-bar" id="moraBarTotal" style="width:0%;background:var(--red)"></div></div><div class="mora-meta"><div><div class="mora-kpi-val" id="moraSistemaMM">—</div><div class="mora-kpi-lbl">Var. m/m (pp)</div></div><div><div class="mora-kpi-val neg" id="moraPrivados">—</div><div class="mora-kpi-lbl">Bcos. privados</div></div><div><div class="mora-kpi-val" id="moraTotalTend">—</div><div class="mora-kpi-lbl">Var. 12m (pp)</div></div></div></div>
   </div>
   <div class="sh"><div class="st"><em>02</em> TASAS DE INTERÉS — BCRA EN VIVO</div></div>
   <div class="tbl-wrap"><div style="padding:12px 14px">
     <div class="tasa-row"><div><div class="tasa-nombre">Política Monetaria (Pases)</div><div class="tasa-desc">Tasa de referencia BCRA</div></div><div class="tasa-vals"><div class="tasa-tna neu" id="tPolitica">—</div><div class="tasa-tea" id="tPoliticaTEA">TEA: —</div></div></div>
     <div class="tasa-row"><div><div class="tasa-nombre">BADLAR Bancos Privados</div><div class="tasa-desc">Depósitos +$1M 30-35 días</div></div><div class="tasa-vals"><div class="tasa-tna neu" id="tBadlar">—</div><div class="tasa-tea" id="tBadlarTEA">TEA: —</div></div></div>
-    <div class="tasa-row"><div><div class="tasa-nombre">BADLAR Bancos Públicos</div><div class="tasa-desc">Depósitos +$1M bancos oficiales</div></div><div class="tasa-vals"><div class="tasa-tna neu" id="tBadlarPub">—</div><div class="tasa-tea" id="tBadlarPubTEA">TEA: —</div></div></div>
+    <div class="tasa-row"><div><div class="tasa-nombre">BADLAR Sistema</div><div class="tasa-desc">Bancos públicos y privados</div></div><div class="tasa-vals"><div class="tasa-tna neu" id="tBadlarPub">—</div><div class="tasa-tea" id="tBadlarPubTEA">TEA: —</div></div></div>
     <div class="tasa-row"><div><div class="tasa-nombre">TM20 Bancos Privados</div><div class="tasa-desc">Depósitos +$20M</div></div><div class="tasa-vals"><div class="tasa-tna neu" id="tTm20">—</div><div class="tasa-tea" id="tTm20TEA">TEA: —</div></div></div>
     <div class="tasa-row"><div><div class="tasa-nombre">Préstamos PyME (ref.)</div><div class="tasa-desc">Tasa activa cartera PyME</div></div><div class="tasa-vals"><div class="tasa-tna" style="color:var(--orange)" id="tPyme">~65%</div><div class="tasa-tea">spread: ~+15pp BADLAR</div></div></div>
     <div class="tasa-row"><div><div class="tasa-nombre">Tarjeta de Crédito (ref.)</div><div class="tasa-desc">Tasa financiación consumo</div></div><div class="tasa-vals"><div class="tasa-tna" style="color:var(--red)">~110%</div><div class="tasa-tea">TEA: &gt;180%</div></div></div>
-    <div class="tasa-row"><div><div class="tasa-nombre">Plazo Fijo 30d (ref.)</div><div class="tasa-desc">Tasa pasiva promedio</div></div><div class="tasa-vals"><div class="tasa-tna pos" id="tPF">—</div><div class="tasa-tea" id="tPFTEA">TEA: —</div></div></div>
-    <div class="tasa-row"><div><div class="tasa-nombre">TC Referencia BNA</div><div class="tasa-desc">Tipo de cambio BCRA ref. BNA</div></div><div class="tasa-vals"><div class="tasa-tna info" id="mTcRefBna">—</div><div class="tasa-tea">USD · BNA</div></div></div>
+    <div class="tasa-row"><div><div class="tasa-nombre">Plazo Fijo 30 días</div><div class="tasa-desc">Depósitos a 30 días · BCRA</div></div><div class="tasa-vals"><div class="tasa-tna pos" id="tPF">—</div><div class="tasa-tea" id="tPFTEA">TEA: —</div></div></div>
+    <div class="tasa-row"><div><div class="tasa-nombre">TC Mayorista Referencia</div><div class="tasa-desc">Com. A 3500 · BCRA</div></div><div class="tasa-vals"><div class="tasa-tna info" id="mTcRefBna">—</div><div class="tasa-tea" id="mTcRefFecha">ARS/USD</div></div></div>
   </div></div>
   <div class="sh"><div class="st"><em>03</em> SPREAD Y RENTABILIDAD</div></div>
   <div class="g3">
@@ -377,7 +378,12 @@ async function pingBackend(){
   return !!d?.ok;
 }
 
-// ── INDICADORES EXTERNOS (mora + señales + tasas vía datos.gob.ar) ──────────
+// ── INDICADORES EXTERNOS (BCRA v4 + datos.gob.ar vía backend) ──────────────
+const MESES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const per=f=>{if(!f)return'';const[y,m]=f.split('-');return`${MESES[+m-1]}-${y.slice(2)}`;};
+const sgn=(v,d=1)=>`${v>0?'+':''}${v.toFixed(d)}`;
+const setVal=(id,v,suf='%',d=1,invert=false)=>{const el=$(id);if(!el||v==null)return;el.textContent=sgn(v,d)+suf;const good=invert?v<0:v>0;el.classList.remove('pos','neg','neu','info');el.classList.add(v===0?'neu':good?'pos':'neg');};
+
 function applyIndicadoresExt(ext){
   if(!ext||ext.error)return;
   if(ext.mora)      applyMora(ext.mora);
@@ -386,104 +392,47 @@ function applyIndicadoresExt(ext){
   if(ext.tasas_ext) applyTasasExt(ext.tasas_ext);
 }
 
-function applyMora(mora){
-  // Sistema financiero total
-  if(mora.sistema_pct!=null){
-    const pct=mora.sistema_pct;
-    const el=$('moraTotal');
-    if(el){el.textContent=`${pct}%`;}
+function applyMora(m){
+  if(m.sistema_pct!=null){
+    const pct=m.sistema_pct;
+    $('moraTotal')&&($('moraTotal').textContent=`${pct.toFixed(1)}%`);
     const bar=$('moraBarTotal');
-    if(bar){
-      // Escala: 0% = 0px, 15% = 100%
-      const w=Math.min(100,Math.round(pct/15*100));
-      bar.style.width=`${w}%`;
-      bar.style.background=pct>8?'var(--red)':pct>5?'var(--orange)':'var(--yellow)';
-    }
-    const desc=$('moraTotalDesc');
-    if(desc){
-      const ts=ext_last_ts?` · ${ext_last_ts}`:'';
-      desc.textContent=`Mora total sector privado${ts}`;
-    }
+    if(bar){bar.style.width=`${Math.min(100,Math.round(pct/15*100))}%`;bar.style.background=pct>8?'var(--red)':pct>5?'var(--orange)':'var(--yellow)';}
+    $('moraTotalDesc')&&($('moraTotalDesc').textContent=`Irregularidad cartera privada · ${per(m.periodo)} · BCRA`);
   }
-  // Privados
-  if(mora.privados_pct!=null){
-    const el=$('moraPrivados');
-    if(el){el.textContent=`${mora.privados_pct}%`;}
-  }
-  // Irreg sistema en millones
-  if(mora.irreg_sis_mm!=null){
-    const el=$('moraSistemaMM');
-    if(el){el.textContent=`$${Math.round(mora.irreg_sis_mm/1000)}B`;}
-  }
-  // Tendencia placeholder — no tenemos dato previo, dejamos en blanco
-  const tend=$('moraTotalTend');
-  if(tend&&mora.sistema_pct!=null){
-    tend.textContent='BCRA';
-    tend.style.color='var(--muted)';
-  }
+  if(m.privados_pct!=null&&$('moraPrivados'))$('moraPrivados').textContent=`${m.privados_pct.toFixed(1)}%`;
+  setVal('moraSistemaMM',m.sistema_var_pp,'pp',2,true);   // suba de mora = rojo
+  setVal('moraTotalTend',m.sistema_12m_pp,'pp',1,true);
 }
 
 function applySenales(s){
-  // Cemento IPI
-  if(s.cemento_var_mm!=null){
-    const v=s.cemento_var_mm;
-    const el=$('senalCemento');
-    if(el){
-      el.textContent=`${v>0?'+':''}${v.toFixed(1)}%`;
-      el.className=`card-val ${v>0?'pos':v<0?'neg':'neu'}`;
-    }
-    const sub=$('senalCementoSub');
-    if(sub){sub.textContent=`IPI cemento · idx ${s.cemento_ipi!=null?s.cemento_ipi.toFixed(1):'—'}`;}
-  }
-  // EMI
-  if(s.emi_var_mm!=null){
-    const v=s.emi_var_mm;
-    const el=$('senalEMI');
-    if(el){
-      el.textContent=`${v>0?'+':''}${v.toFixed(1)}%`;
-      el.className=`card-val ${v>0?'pos':v<0?'neg':'neu'}`;
-    }
-    const sub=$('senalEMISub');
-    if(sub){sub.textContent=`EMI · idx ${s.emi_idx!=null?s.emi_idx.toFixed(1):'—'}`;}
-  }
+  setVal('senalCemento',s.cemento_var_ya);
+  if(s.cemento_ipi!=null&&$('senalCementoSub'))$('senalCementoSub').textContent=`IPI cemento · ${per(s.cemento_periodo)}`;
+  setVal('senalEMI',s.ipi_var_mm);
+  if(s.ipi_idx!=null&&$('senalEMISub'))$('senalEMISub').textContent=`IPI manufacturero · ${per(s.ipi_periodo)}`;
 }
 
-function applyEmae(act){
-  if(act.emae_var_mm!=null){
-    const v=act.emae_var_mm;
-    const el=$('emaeNacional');
-    if(el){
-      el.textContent=`${v>0?'+':''}${v.toFixed(1)}%`;
-      el.className=`card-val ${v>0?'pos':v<0?'neg':'neu'}`;
-    }
-    const sub=$('emaeSub');
-    if(sub){sub.textContent=`EMAE · idx ${act.emae_idx!=null?act.emae_idx.toFixed(1):'—'}`;}
-  }
+function applyEmae(a){
+  setVal('emaeNacional',a.emae_var_mm);
+  setVal('emaeYoY',a.emae_var_ya);
+  if(a.emae_idx!=null&&$('emaeSub'))$('emaeSub').textContent=`INDEC · ${per(a.periodo)} · idx ${a.emae_idx.toFixed(1)}`;
 }
 
 function applyTasasExt(t){
-  // PF 30d TNA desde datos.gob.ar
   if(t.pf_30d_tna!=null){
-    const el=$('tPF');
-    if(el)el.textContent=`${t.pf_30d_tna.toFixed(1)}% TNA`;
-    const tea=$('tPFTEA');
-    if(tea&&t.pf_30d_tea!=null)tea.textContent=`TEA: ${t.pf_30d_tea.toFixed(1)}%`;
+    $('tPF')&&($('tPF').textContent=`${t.pf_30d_tna.toFixed(2)}% TNA`);
+    $('tPFTEA')&&($('tPFTEA').textContent=`TEA: ${(t.pf_30d_tea??tna2tea(t.pf_30d_tna)).toFixed(1)}%`);
   }
-  // BADLAR público
-  if(t.badlar_pub!=null){
-    const el=$('tBadlarPub');
-    if(el)el.textContent=`${t.badlar_pub.toFixed(1)}% TNA`;
-    const tea=$('tBadlarPubTEA');
-    if(tea)tea.textContent=`TEA: ${tna2tea(t.badlar_pub).toFixed(1)}%`;
+  if(t.badlar_total!=null){
+    $('tBadlarPub')&&($('tBadlarPub').textContent=`${t.badlar_total.toFixed(2)}% TNA`);
+    $('tBadlarPubTEA')&&($('tBadlarPubTEA').textContent=`TEA: ${tna2tea(t.badlar_total).toFixed(1)}%`);
   }
-  // TC Ref BNA
-  if(t.tc_ref_bna!=null){
-    const el=$('mTcRefBna');
-    if(el)el.textContent=`$${fmt(t.tc_ref_bna)}`;
+  if(t.tc_mayorista!=null){
+    $('mTcRefBna')&&($('mTcRefBna').textContent=`$${fmt(t.tc_mayorista.toFixed(2))}`);
+    $('mTcRefFecha')&&t.tc_fecha&&($('mTcRefFecha').textContent=`ARS/USD · ${t.tc_fecha.split('-').reverse().join('/')}`);
   }
 }
 
-// Variable auxiliar para timestamp del endpoint ext
 let ext_last_ts='';
 
 // COMMODITIES — Yahoo Finance via dual proxy (allorigins → corsproxy fallback)
@@ -532,13 +481,12 @@ async function fetchAllCommodities(){
   updateTickerFromDOM();
 }
 
-// BCRA directo — devuelve null si CORS bloquea todo
+// BCRA directo v4.0 — fallback si el backend no responde (puede bloquearlo CORS)
 async function fetchBCRADirect(){
-  const f=async id=>{const d=await safeGet(`https://api.bcra.gob.ar/estadisticas/v2.0/datosvariable/${id}/1/1`);return d?.results?.[0]?.valor??null;};
-  const[infl,tasa,badlar,tm20,res]=await Promise.all([f(27),f(6),f(7),f(8),f(1)]);
-  const got=[infl,tasa,badlar,tm20,res].filter(v=>v!==null).length;
-  if(got===0)return null; // CORS bloqueó todo
-  return{infl,tasa,badlar,tm20,res};
+  const d=await safeGet("https://api.bcra.gob.ar/estadisticas/v4.0/monetarias?limit=1000",10000);
+  if(!d?.results?.length)return null;
+  const m={};for(const it of d.results)m[it.idVariable]=it.ultValorInformado;
+  return{infl:m[27]??null,tasa:m[160]??null,badlar:m[7]??null,tm20:m[8]??null,res:m[1]!=null?+(m[1]/1000).toFixed(1):null};
 }
 
 // DolarAPI directo — normaliza casa a minúsculas sin espacios
@@ -565,7 +513,9 @@ async function fetchIndicadores(){
     tasa:  b.tasa_politica??b.tasa??null,
     badlar:b.badlar??null,
     tm20:  b.tm20??null,
-    res:   b.reservas_bn??b.res??null
+    res:   b.reservas_bn??b.res??null,
+    infl_f:b.inflacion_fecha??null,
+    tasa_f:b.tasa_politica_fecha??null
   };
   return{dolar,bcra};
 }
@@ -581,8 +531,8 @@ function updateMacroUI(dolar,bcra){
     if(blue&&of){const br=((blue.venta/of.venta-1)*100).toFixed(1);$('mBrechaG').textContent=`+${br}%`;}
   }
   if(bcra){
-    if(bcra.infl!=null)$('mInfl').textContent=`${bcra.infl}%`;
-    if(bcra.tasa!=null){$('mTasaBcra').textContent=`${bcra.tasa}% TNA`;$('tPolitica').textContent=`${bcra.tasa}% TNA`;$('tPoliticaTEA').textContent=`TEA: ${tna2tea(bcra.tasa).toFixed(1)}%`;}
+    if(bcra.infl!=null){$('mInfl').textContent=`${bcra.infl}%`;$('mInflA').textContent=bcra.infl_f?`dato: ${per(bcra.infl_f)}`:'INDEC vía BCRA';}
+    if(bcra.tasa!=null){$('mTasaBcra').textContent=`${bcra.tasa}% TNA`;if(bcra.tasa_f){const f=bcra.tasa_f.split('-').reverse().join('/');$('mTasaBcra').title=`Último dato BCRA: ${f}`;$('mTasaBcraF')&&($('mTasaBcraF').textContent=`últ. dato BCRA: ${f}`);$('tPoliticaTEA').dataset.f=f;}$('tPolitica').textContent=`${bcra.tasa}% TNA`;$('tPoliticaTEA').textContent=`TEA: ${tna2tea(bcra.tasa).toFixed(1)}%`+(bcra.tasa_f?` · últ. ${per(bcra.tasa_f)}`:'');}
     if(bcra.badlar!=null){$('tBadlar').textContent=`${bcra.badlar}% TNA`;$('tBadlarTEA').textContent=`TEA: ${tna2tea(bcra.badlar).toFixed(1)}%`;const pf=(bcra.badlar*0.97).toFixed(1);$('tPyme').textContent=`~${(Number(bcra.badlar)+15).toFixed(0)}% TNA`;$('spreadPyme')&&($('spreadPyme').textContent=`~+15pp`);}
     if(bcra.tm20!=null){$('tTm20').textContent=`${bcra.tm20}% TNA`;$('tTm20TEA').textContent=`TEA: ${tna2tea(bcra.tm20).toFixed(1)}%`;}
     if(bcra.res!=null)$('mRes').textContent=`$${bcra.res}B`;
