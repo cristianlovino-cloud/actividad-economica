@@ -593,11 +593,12 @@ async function refreshAll(){
       setStatus('offline','sin datos');
     }
     S._dolar=dolar; S._bcra=bcra;
-    if(dolar||bcra){updateMacroUI(dolar,bcra);updateTCE(dolar);}
+    if(dolar||bcra){updateMacroUI(dolar,bcra);updateTCE(dolar);updateTickerFromDOM();}
     // 4) Indicadores externos (mora + señales + tasas desde datos.gob.ar)
     if(extResult&&!extResult.error){
       ext_last_ts=extResult.timestamp?new Date(extResult.timestamp).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'}):'';
       applyIndicadoresExt(extResult);
+      updateTickerFromDOM();
     }
     if(nots){S.noticias=nots.items||[];renderNoticias();}
     if(sects)S.sectoresData[S.prov]=sects;
@@ -686,7 +687,11 @@ let deferredPrompt=null;
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;if(!localStorage.getItem('install-dismissed'))$('installBanner').classList.add('visible');});
 $('installBtn').addEventListener('click',async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;$('installBanner').classList.remove('visible');});
 function closeInstall(){$('installBanner').classList.remove('visible');localStorage.setItem('install-dismissed','1');}
-if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+if('serviceWorker'in navigator){
+  navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{});
+  let _swReloaded=false;
+  navigator.serviceWorker.addEventListener('controllerchange',()=>{if(_swReloaded)return;_swReloaded=true;location.reload();});
+}
 
 function updateTCE(dolar){
   if(!dolar)return;
