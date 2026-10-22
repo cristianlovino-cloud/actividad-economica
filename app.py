@@ -361,6 +361,29 @@ def get_sectores(prov: str):
     return {"ts": datetime.utcnow().isoformat(), **DATA[prov]}
 
 
+@app.route("/api/ping")
+def ping():
+    return jsonify({"ok": True, "ts": datetime.utcnow().isoformat()})
+
+
+@app.route("/api/indicadores-ext")
+@cached("indicadores_ext", "indicadores")
+def indicadores_ext():
+    """
+    Datos reales de datos.gob.ar + BCRA:
+      - mora sistema y privados (calculada como %)
+      - señales adelantadas: IPI cemento, EMI
+      - EMAE mensual
+      - tasas extra: PF 30d TNA/TEA, BADLAR público, TC ref BNA
+    """
+    try:
+        from datos_externos import get_indicadores_ext
+        return jsonify(get_indicadores_ext())
+    except Exception as e:
+        log.error(f"indicadores_ext error: {e}")
+        return jsonify({"error": str(e), "ts": datetime.utcnow().isoformat()}), 500
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)
