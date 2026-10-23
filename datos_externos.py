@@ -134,12 +134,20 @@ SERIES = {
     # Mora — ratio de irregularidad cartera privada, YA en % (aunque la API diga "millones")
     "mora_sistema":  "332.2_SISTEMA_FIADA__53",
     "mora_privados": "332.2_BANCOS_PRIADA__51",
+    "mora_publicos": "332.2_BANCOS_PUBADA__55",
+    "mora_nobanc":   "332.2_ENTIDADES_ADA__52",   # entidades financieras no bancarias
+    "mora_priv_nac": "332.2_BANCOS_PRIADA__59",   # bancos privados nacionales
     # Señales
     "cemento":       "453.2_CEMENTONTO_0_0_7_59",       # IPI cemento, serie original
     "ipi_desest":    "453.1_SERIE_DESEADA_0_0_24_58",   # IPI manufacturero desestacionalizado (reemplaza EMI, discontinuado)
     # Actividad
     "emae_desest":   "143.3_NO_PR_2004_A_31",           # EMAE desestacionalizado
     "emae_orig":     "143.3_NO_PR_2004_A_21",           # EMAE original (para var. interanual)
+    # Empleo privado registrado por provincia (miles) — original y desestacionalizado
+    "emp_SF":   "154.1_SA_FE_FE_C_0_0_8",    "emp_SF_d": "154.2_SA_FE_FE_S_0_0_8",
+    "emp_ER":   "154.1_EE_RIOSIOS_C_0_0_10",
+    "emp_SJ":   "154.1_SJUANUAN_C_0_0_8",
+    "emp_SC":   "154.1_SA_CRUZRUZ_C_0_0_10", "emp_SC_d": "154.2_SA_CRUZRUZ_S_0_0_10",
     # Tasa PF mensual (respaldo si falla BCRA)
     "pf_30_59":      "89.1_TIPF35D_0_0_35",
 }
@@ -179,6 +187,35 @@ def _mom(rows):
     return _pct(rows[0][1], rows[1][1]) if len(rows) > 1 else None
 
 
+def _seg(rows):
+    """Resumen de una serie de mora (%): último, var m/m y 12m en pp, valor hace 1 año."""
+    if not rows:
+        return None
+    hace12 = rows[12][1] if len(rows) > 12 else None
+    return {
+        "pct":     round(rows[0][1], 2),
+        "var_pp":  round(rows[0][1] - rows[1][1], 2) if len(rows) > 1 else None,
+        "var12_pp": round(rows[0][1] - hace12, 2) if hace12 is not None else None,
+        "hace12":  round(hace12, 2) if hace12 is not None else None,
+        "periodo": rows[0][0],
+    }
+
+
+def _prov_empleo(cod):
+    orig = _serie(f"emp_{cod}")
+    if not orig:
+        return None
+    des = _serie(f"emp_{cod}_d") if f"emp_{cod}_d" in SERIES else []
+    base_mm = des if len(des) > 1 else orig
+    return {
+        "miles":   round(orig[0][1], 1),
+        "var_ya":  _yoy(orig),
+        "var_mm":  _mom(base_mm),
+        "mm_desest": len(des) > 1,
+        "periodo": orig[0][0],
+    }
+
+
 def _r(v, n=2):
     return round(v, n) if v is not None else None
 
@@ -207,6 +244,12 @@ def _build():
             "sistema_var_pp": _r(mora_s[0][1] - mora_s[1][1]) if len(mora_s) > 1 else None,
             "sistema_12m_pp": _r(mora_s[0][1] - mora_s[12][1]) if len(mora_s) > 12 else None,
             "periodo":        mora_s[0][0] if mora_s else None,
+            "segmentos": {
+                "privados":     _seg(mora_p),
+                "publicos":     _seg(_serie("mora_publicos")),
+                "no_bancarias": _seg(_serie("mora_nobanc")),
+                "priv_nac":     _seg(_serie("mora_priv_nac")),
+            },
         },
         "senales": {
             "cemento_ipi":    _r(cem[0][1], 1) if cem else None,
@@ -222,6 +265,7 @@ def _build():
             "emae_var_ya": _yoy(emae_o),
             "periodo":     emae_d[0][0] if emae_d else None,
         },
+        "provincias": {c: _prov_empleo(c) for c in ("SF", "ER", "SJ", "SC")},
         "tasas_ext": {
             "pf_30d_tna":   pf,
             "pf_30d_tea":   _r(((1 + pf / 100 / 365) ** 365 - 1) * 100) if pf else None,
@@ -235,6 +279,7 @@ def _build():
             "senales": "INDEC vía datos.gob.ar (IPI cemento, IPI manufacturero)",
             "actividad": "INDEC vía datos.gob.ar (EMAE base 2004)",
             "tasas_ext": "BCRA API v4.0",
+            "provincias": "SIPA vía datos.gob.ar (asalariados registrados sector privado)",
         },
     }
 

@@ -229,10 +229,10 @@ tbody tr:hover td{background:var(--s2)}
 <aside class="sidebar">
   <div class="sb-sec">
     <div class="sb-lbl">Provincia</div>
-    <button class="prov-card active" onclick="setProv('SF')" id="pbSF"><div class="pc-left"><span class="pc-badge">SF</span><span class="pc-name">Santa Fe</span></div><span class="pc-var pos">+4.2%</span></button>
-    <button class="prov-card" onclick="setProv('ER')" id="pbER"><div class="pc-left"><span class="pc-badge">ER</span><span class="pc-name">Entre Ríos</span></div><span class="pc-var neu">+2.1%</span></button>
-    <button class="prov-card" onclick="setProv('SJ')" id="pbSJ"><div class="pc-left"><span class="pc-badge">SJ</span><span class="pc-name">San Juan</span></div><span class="pc-var neu">+1.4%</span></button>
-    <button class="prov-card" onclick="setProv('SC')" id="pbSC"><div class="pc-left"><span class="pc-badge">SC</span><span class="pc-name">Santa Cruz</span></div><span class="pc-var pos">+3.8%</span></button>
+    <button class="prov-card active" onclick="setProv('SF')" id="pbSF"><div class="pc-left"><span class="pc-badge">SF</span><span class="pc-name">Santa Fe</span></div><span class="pc-var neu" id="pvSF">—</span></button>
+    <button class="prov-card" onclick="setProv('ER')" id="pbER"><div class="pc-left"><span class="pc-badge">ER</span><span class="pc-name">Entre Ríos</span></div><span class="pc-var neu" id="pvER">—</span></button>
+    <button class="prov-card" onclick="setProv('SJ')" id="pbSJ"><div class="pc-left"><span class="pc-badge">SJ</span><span class="pc-name">San Juan</span></div><span class="pc-var neu" id="pvSJ">—</span></button>
+    <button class="prov-card" onclick="setProv('SC')" id="pbSC"><div class="pc-left"><span class="pc-badge">SC</span><span class="pc-name">Santa Cruz</span></div><span class="pc-var neu" id="pvSC">—</span></button>
   </div>
   <div class="sb-filters">
     <div class="sb-lbl" style="margin-top:4px">Filtros</div>
@@ -278,13 +278,13 @@ tbody tr:hover td{background:var(--s2)}
 
 <!-- MORA & TASAS -->
 <div class="tab-content" id="tab-mora">
-  <div class="sh"><div class="st"><em>01</em> MORA POR SEGMENTO — SISTEMA FINANCIERO</div><span style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted)">BCRA · IFNB</span></div>
+  <div class="sh"><div class="st"><em>01</em> MORA POR TIPO DE ENTIDAD</div><span style="font-family:'DM Mono',monospace;font-size:8px;color:var(--muted)">BCRA · datos.gob.ar</span></div>
   <div class="g2">
-    <div class="mora-card familias"><div class="mora-top"><div class="mora-nombre">👨‍👩‍👧 Familias</div><span class="tag tag-red">PERSONAS</span></div><div class="mora-val" style="color:var(--red)">10.6%</div><div class="mora-desc">Irregularidad hogares · ene-2026 · máx. 20 años</div><div class="mora-bar-bg"><div class="mora-bar" style="width:75%;background:var(--red)"></div></div><div class="mora-meta"><div><div class="mora-kpi-val neg">11.0%</div><div class="mora-kpi-lbl">Tarjetas</div></div><div><div class="mora-kpi-val neg">13.2%</div><div class="mora-kpi-lbl">Personal</div></div><div><div class="mora-kpi-val pos">1.3%</div><div class="mora-kpi-lbl">Hipotec.</div></div></div></div>
-    <div class="mora-card empresas"><div class="mora-top"><div class="mora-nombre">🏢 Empresas</div><span class="tag tag-purple">CORPORATIVO</span></div><div class="mora-val" style="color:var(--purple)">2.9%</div><div class="mora-desc">Irregularidad cartera comercial · dic-2025</div><div class="mora-bar-bg"><div class="mora-bar" style="width:29%;background:var(--purple)"></div></div><div class="mora-meta"><div><div class="mora-kpi-val pos">0.9%</div><div class="mora-kpi-lbl">Grandes</div></div><div><div class="mora-kpi-val neu">2.7%</div><div class="mora-kpi-lbl">ene-2026</div></div><div><div class="mora-kpi-val neg">4.0%</div><div class="mora-kpi-lbl">PyMEs</div></div></div></div>
-    <div class="mora-card pymes"><div class="mora-top"><div class="mora-nombre">🏭 PyMEs</div><span class="tag tag-yellow">SEPyME</span></div><div class="mora-val" style="color:var(--yellow)">4.0%</div><div class="mora-desc">Irregularidad cartera PyME · ene-2026</div><div class="mora-bar-bg"><div class="mora-bar" style="width:40%;background:var(--yellow)"></div></div><div class="mora-meta"><div><div class="mora-kpi-val neg">1/8</div><div class="mora-kpi-lbl">c/empresa</div></div><div><div class="mora-kpi-val neg">4.0%</div><div class="mora-kpi-lbl">Pyme</div></div><div><div class="mora-kpi-val pos">0.9%</div><div class="mora-kpi-lbl">Grandes</div></div></div></div>
+    <div class="mora-card familias"><div class="mora-top"><div class="mora-nombre">🏦 Bancos Privados</div><span class="tag tag-blue">PRIVADOS</span></div><div class="mora-val" id="mc-privados-val" style="color:var(--muted)">—</div><div class="mora-desc" id="mc-privados-desc">Irregularidad cartera privada · cargando...</div><div class="mora-bar-bg"><div class="mora-bar" id="mc-privados-bar" style="width:0%"></div></div><div class="mora-meta"><div><div class="mora-kpi-val" id="mc-privados-mm">—</div><div class="mora-kpi-lbl">Var. m/m (pp)</div></div><div><div class="mora-kpi-val" id="mc-privados-12">—</div><div class="mora-kpi-lbl">Var. 12m (pp)</div></div><div><div class="mora-kpi-val" id="mc-privados-ya" style="color:var(--muted)">—</div><div class="mora-kpi-lbl">Hace 1 año</div></div></div></div>
+    <div class="mora-card empresas"><div class="mora-top"><div class="mora-nombre">🏛 Bancos Públicos</div><span class="tag tag-purple">PÚBLICOS</span></div><div class="mora-val" id="mc-publicos-val" style="color:var(--muted)">—</div><div class="mora-desc" id="mc-publicos-desc">Irregularidad cartera privada · cargando...</div><div class="mora-bar-bg"><div class="mora-bar" id="mc-publicos-bar" style="width:0%"></div></div><div class="mora-meta"><div><div class="mora-kpi-val" id="mc-publicos-mm">—</div><div class="mora-kpi-lbl">Var. m/m (pp)</div></div><div><div class="mora-kpi-val" id="mc-publicos-12">—</div><div class="mora-kpi-lbl">Var. 12m (pp)</div></div><div><div class="mora-kpi-val" id="mc-publicos-ya" style="color:var(--muted)">—</div><div class="mora-kpi-lbl">Hace 1 año</div></div></div></div>
+    <div class="mora-card pymes"><div class="mora-top"><div class="mora-nombre">💳 Entidades no bancarias</div><span class="tag tag-yellow">EFNB</span></div><div class="mora-val" id="mc-no_bancarias-val" style="color:var(--muted)">—</div><div class="mora-desc" id="mc-no_bancarias-desc">Compañías financieras reguladas · cargando...</div><div class="mora-bar-bg"><div class="mora-bar" id="mc-no_bancarias-bar" style="width:0%"></div></div><div class="mora-meta"><div><div class="mora-kpi-val" id="mc-no_bancarias-mm">—</div><div class="mora-kpi-lbl">Var. m/m (pp)</div></div><div><div class="mora-kpi-val" id="mc-no_bancarias-12">—</div><div class="mora-kpi-lbl">Var. 12m (pp)</div></div><div><div class="mora-kpi-val" id="mc-no_bancarias-ya" style="color:var(--muted)">—</div><div class="mora-kpi-lbl">Hace 1 año</div></div></div></div>
     <!-- SISTEMA: datos en vivo desde datos.gob.ar via backend -->
-    <div class="mora-card total"><div class="mora-top"><div class="mora-nombre">🏦 Sistema</div><span class="tag tag-red">TOTAL</span></div><div class="mora-val" style="color:var(--red)" id="moraTotal">—</div><div class="mora-desc" id="moraTotalDesc">Mora total · cargando...</div><div class="mora-bar-bg"><div class="mora-bar" id="moraBarTotal" style="width:0%;background:var(--red)"></div></div><div class="mora-meta"><div><div class="mora-kpi-val" id="moraSistemaMM">—</div><div class="mora-kpi-lbl">Var. m/m (pp)</div></div><div><div class="mora-kpi-val neg" id="moraPrivados">—</div><div class="mora-kpi-lbl">Bcos. privados</div></div><div><div class="mora-kpi-val" id="moraTotalTend">—</div><div class="mora-kpi-lbl">Var. 12m (pp)</div></div></div></div>
+    <div class="mora-card total"><div class="mora-top"><div class="mora-nombre">🏦 Sistema</div><span class="tag tag-red">TOTAL</span></div><div class="mora-val" style="color:var(--red)" id="moraTotal">—</div><div class="mora-desc" id="moraTotalDesc">Mora total · cargando...</div><div class="mora-bar-bg"><div class="mora-bar" id="moraBarTotal" style="width:0%;background:var(--red)"></div></div><div class="mora-meta"><div><div class="mora-kpi-val" id="moraSistemaMM">—</div><div class="mora-kpi-lbl">Var. m/m (pp)</div></div><div><div class="mora-kpi-val" id="moraPrivados" style="color:var(--muted)">—</div><div class="mora-kpi-lbl">Hace 1 año</div></div><div><div class="mora-kpi-val" id="moraTotalTend">—</div><div class="mora-kpi-lbl">Var. 12m (pp)</div></div></div></div>
   </div>
   <div class="sh"><div class="st"><em>02</em> TASAS DE INTERÉS — BCRA EN VIVO</div></div>
   <div class="tbl-wrap"><div style="padding:12px 14px">
@@ -390,6 +390,14 @@ function applyIndicadoresExt(ext){
   if(ext.senales)   applySenales(ext.senales);
   if(ext.actividad) applyEmae(ext.actividad);
   if(ext.tasas_ext) applyTasasExt(ext.tasas_ext);
+  if(ext.provincias){
+    S.empleo=ext.provincias;
+    for(const[c,e]of Object.entries(ext.provincias)){
+      const el=$(`pv${c}`);if(!el||!e||e.var_ya==null)continue;
+      el.textContent=`${vs(e.var_ya)}${e.var_ya.toFixed(1)}%`;el.className=`pc-var ${vc(e.var_ya)}`;el.title=`Empleo privado registrado i.a. · ${per(e.periodo)}`;
+    }
+    if(S.tab==='actividad')renderActividad();
+  }
 }
 
 function applyMora(m){
@@ -400,8 +408,19 @@ function applyMora(m){
     if(bar){bar.style.width=`${Math.min(100,Math.round(pct/15*100))}%`;bar.style.background=pct>8?'var(--red)':pct>5?'var(--orange)':'var(--yellow)';}
     $('moraTotalDesc')&&($('moraTotalDesc').textContent=`Irregularidad cartera privada · ${per(m.periodo)} · BCRA`);
   }
-  if(m.privados_pct!=null&&$('moraPrivados'))$('moraPrivados').textContent=`${m.privados_pct.toFixed(1)}%`;
+  if(m.sistema_pct!=null&&m.sistema_12m_pp!=null&&$('moraPrivados'))$('moraPrivados').textContent=`${(m.sistema_pct-m.sistema_12m_pp).toFixed(1)}%`;
   setVal('moraSistemaMM',m.sistema_var_pp,'pp',2,true);   // suba de mora = rojo
+  const segs=m.segmentos||{};
+  for(const[k,v]of Object.entries(segs)){
+    if(!v||v.pct==null||!$(`mc-${k}-val`))continue;
+    const col=v.pct>8?'var(--red)':v.pct>5?'var(--orange)':'var(--yellow)';
+    const ve=$(`mc-${k}-val`);ve.textContent=`${v.pct.toFixed(1)}%`;ve.style.color=col;
+    const bar=$(`mc-${k}-bar`);bar.style.width=`${Math.min(100,Math.round(v.pct/15*100))}%`;bar.style.background=col;
+    const d=$(`mc-${k}-desc`);d.textContent=d.textContent.replace(/ · .*$/,'')+` · ${per(v.periodo)}`;
+    setVal(`mc-${k}-mm`,v.var_pp,'pp',2,true);
+    setVal(`mc-${k}-12`,v.var12_pp,'pp',1,true);
+    if(v.hace12!=null)$(`mc-${k}-ya`).textContent=`${v.hace12.toFixed(1)}%`;
+  }
   setVal('moraTotalTend',m.sistema_12m_pp,'pp',1,true);
 }
 
@@ -622,6 +641,7 @@ function sparkHtml(prov,cod){const h=(SPARK[prov]||{})[cod]||Array(12).fill(0);c
 
 function renderActividad(){
   const data=getProvData();let sects=[...data.sectores];
+  const emp=(S.empleo||{})[S.prov];
   if(S.opp!=='todas')sects=sects.filter(s=>s.opp===S.opp);
   if(S.size!=='todas')sects=sects.filter(s=>s.size===S.size);
   sects.sort((a,b)=>S.period==='anual'?b.varA-a.varA:b.varM-a.varM);
@@ -633,12 +653,13 @@ function renderActividad(){
   if(alertas.length){ab.classList.add('visible');$('alertText').textContent=alertas.map(a=>`${a.resumen_corto} [${a.fuente}]`).join(' · ');}else ab.classList.remove('visible');
   $('actContent').innerHTML=`
     <div class="kpi-row">
-      <div class="card card-stripe stripe-green"><div class="card-top"><span class="card-ico">📈</span><span class="tag tag-green">ANUAL</span></div><div class="card-val ${vc(data.var_anual)}">${vs(data.var_anual)}${data.var_anual.toFixed(1)}%</div><div class="card-lbl">Var. Anual PBG · ${data.provincia}</div></div>
-      <div class="card card-stripe stripe-yellow"><div class="card-top"><span class="card-ico">📅</span><span class="tag tag-yellow">MENSUAL</span></div><div class="card-val ${vc(data.var_mensual)}">${vs(data.var_mensual)}${data.var_mensual.toFixed(1)}%</div><div class="card-lbl">Var. Mensual · Últ. dato</div></div>
+      <div class="card card-stripe stripe-green"><div class="card-top"><span class="card-ico">👷</span><span class="tag tag-green">INTERANUAL</span></div><div class="card-val ${emp?.var_ya!=null?vc(emp.var_ya):'neu'}">${emp?.var_ya!=null?vs(emp.var_ya)+emp.var_ya.toFixed(1)+'%':'—'}</div><div class="card-lbl">Empleo privado registrado · ${data.provincia}</div><div class="card-sub">${emp?`${fmt(emp.miles)} mil asalariados · ${per(emp.periodo)}`:'SIPA · cargando...'}</div></div>
+      <div class="card card-stripe stripe-yellow"><div class="card-top"><span class="card-ico">📅</span><span class="tag tag-yellow">MENSUAL</span></div><div class="card-val ${emp?.var_mm!=null?vc(emp.var_mm):'neu'}">${emp?.var_mm!=null?vs(emp.var_mm)+emp.var_mm.toFixed(2)+'%':'—'}</div><div class="card-lbl">Empleo vs. mes anterior</div><div class="card-sub">${emp?(emp.mm_desest?'desestacionalizado':'serie original'):'SIPA'}</div></div>
       <div class="card card-stripe stripe-blue"><div class="card-top"><span class="card-ico">🏭</span><span class="tag tag-blue">SECTORES</span></div><div class="card-val info">${all.length}</div><div class="card-lbl">Actividades SEPyME</div></div>
       <div class="card card-stripe stripe-red"><div class="card-top"><span class="card-ico">⚠</span><span class="tag ${alertas.length?'tag-red':'tag-green'}">${alertas.length?'ALERTAS':'OK'}</span></div><div class="card-val ${alertas.length?'neg':'pos'}">${alertas.length}</div><div class="card-lbl">Alertas tempranas</div></div>
     </div>
     <div class="sh"><div class="st"><em>01</em> FOCO COMERCIAL · ACCIONES PRIORITARIAS</div></div>
+    <div style="font-size:10px;color:var(--yellow);background:rgba(234,179,8,.08);border:1px solid rgba(234,179,8,.25);border-radius:4px;padding:6px 9px;margin-bottom:8px">◆ Variaciones por sector: valores de referencia internos, aún no conectados a fuente oficial (OEDE en integración).</div>
     <div class="g-split">
       <div class="opp-panel crecer"><div class="opp-title crecer">▲ SECTORES PARA CRECER</div>${topC.map(s=>`<div class="opp-row"><div class="opp-rn">${s.nombre}</div><div class="opp-rv pos">${vs(s.varA)}${s.varA.toFixed(1)}% / ${vs(s.varM)}${s.varM.toFixed(1)}%</div></div>`).join('')}</div>
       <div class="opp-panel salir"><div class="opp-title salir">▼ REDUCIR / SALIR</div>${topS.map(s=>`<div class="opp-row"><div class="opp-rn">${s.nombre}</div><div class="opp-rv ${s.varA<0?'neg':'neu'}">${vs(s.varA)}${s.varA.toFixed(1)}% / ${vs(s.varM)}${s.varM.toFixed(1)}%</div></div>`).join('')}</div>
